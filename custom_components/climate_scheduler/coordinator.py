@@ -1,5 +1,6 @@
 """Coordinator for Climate Scheduler."""
 import logging
+import math
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
@@ -98,6 +99,7 @@ class HeatingSchedulerCoordinator(DataUpdateCoordinator):
         self.storage = storage
         self.last_node_states = {}  # Track last node state (temp + modes) for each entity
         self.last_node_times = {}  # Track last node time for each entity to detect time transitions
+        self.manual_overrides = {}  # Independent from advance/history state
         self.override_until = {}  # Track entities with advance override (entity_id -> time)
         self.advance_history = {}  # Track advance events (entity_id -> list of {activated_at, target_time, cancelled_at})
         self._workday_available = None  # Cache for workday integration availability
@@ -184,6 +186,44 @@ class HeatingSchedulerCoordinator(DataUpdateCoordinator):
         # Trigger immediate refresh
         await self.async_request_refresh()
     
+    def _clamp_temperature(self, entity_id: str, temperature: float, minimum: float, maximum: float) -> float:
+        """Clamp system-unit setpoints to settings and the member's advertised limits."""
+        target = max(minimum, min(maximum, temperature))
+        state = self.hass.states.get(entity_id)
+        if state:
+            for key, clamp in (("min_temp", max), ("max_temp", min)):
+                limit = state.attributes.get(key)
+                try:
+                    limit = float(limit)
+                except (TypeError, ValueError):
+                    continue
+                if math.isfinite(limit):
+                    target = clamp(target, limit)
+        return target
+
+    async def async_set_manual_override(self, group_name: str, temperature: float) -> None:
+        """Hold a manual target until the next real node in the weekly schedule."""
+        now = dt_util.now()
+        deadline = None
+        for offset in range(8):
+            date = now + timedelta(days=offset)
+            schedule = await self.storage.async_get_group_schedule(group_name, date.strftime("%a").lower())
+            for node in sorted((schedule or {}).get("nodes", []), key=lambda n: n["time"]):
+                hour, minute = map(int, node["time"].split(":"))
+                candidate = date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                if candidate > now:
+                    deadline = candidate
+                    break
+            if deadline is not None:
+                break
+        group = await self.storage.async_get_group(group_name)
+        for entity_id in (group or {}).get("entities", []):
+            self.override_until.pop(entity_id, None)
+            self.manual_overrides[entity_id] = {
+                "temperature": temperature, "until": deadline,
+                "profile": (group or {}).get("active_profile"),
+            }
+
     async def advance_to_next_node(self, entity_id: str) -> Dict[str, Any]:
         """Manually advance a specific entity to its next scheduled node."""
         _LOGGER.info(f"Advancing {entity_id} to next scheduled node")
@@ -291,6 +331,7 @@ class HeatingSchedulerCoordinator(DataUpdateCoordinator):
         if override_until <= dt_util.now():
             override_until += timedelta(days=1)
         self.override_until[entity_id] = override_until
+        self.manual_overrides.pop(entity_id, None)
         
         # Record advance activation in history
         if entity_id not in self.advance_history:
@@ -316,7 +357,7 @@ class HeatingSchedulerCoordinator(DataUpdateCoordinator):
             clamped_temp = None
             _LOGGER.info(f"{entity_id} temp set to NO_CHANGE - will not modify temperature")
         else:
-            clamped_temp = max(min_temp, min(max_temp, target_temp)) if target_temp is not None else None
+            clamped_temp = self._clamp_temperature(entity_id, target_temp, min_temp, max_temp) if target_temp is not None else None
         
         # Create node signature
         node_signature = {
@@ -471,6 +512,7 @@ class HeatingSchedulerCoordinator(DataUpdateCoordinator):
         """Cancel an active advance override for an entity or a group schedule_id."""
 
         async def _cancel_single(target_entity_id: str) -> None:
+            self.manual_overrides.pop(target_entity_id, None)
             # Mark the most recent advance as cancelled in history (even if override expired)
             if target_entity_id in self.advance_history and self.advance_history[target_entity_id]:
                 latest = self.advance_history[target_entity_id][-1]
@@ -808,6 +850,16 @@ class HeatingSchedulerCoordinator(DataUpdateCoordinator):
                 
                 _LOGGER.info(f"Processing entity: {entity_id} from group '{group_name}'")
                 
+                manual = self.manual_overrides.get(entity_id)
+                if manual:
+                    current_profile = groups[group_name].get("active_profile")
+                    same_profile = manual.get("profile", current_profile) == current_profile
+                    if same_profile and (manual["until"] is None or now < manual["until"]):
+                        results[entity_id] = {"updated": False, "reason": "manual_override_active"}
+                        continue
+                    del self.manual_overrides[entity_id]
+                    self.last_node_states.pop(entity_id, None)
+
                 # Check if entity has an active advance override
                 if entity_id in self.override_until:
                     override_time = self.override_until[entity_id]
@@ -863,15 +915,9 @@ class HeatingSchedulerCoordinator(DataUpdateCoordinator):
                     clamped_temp = None
                     _LOGGER.info(f"{entity_id} temp set to NO_CHANGE - will not modify temperature")
                 else:
-                    clamped_temp = target_temp
-                    if target_temp is not None:
-                        if target_temp < min_temp:
-                            clamped_temp = min_temp
-                            _LOGGER.debug(f"Clamping {entity_id} target {target_temp} -> {clamped_temp}")
-                        elif target_temp > max_temp:
-                            clamped_temp = max_temp
-                            _LOGGER.debug(f"Clamping {entity_id} target {target_temp} -> {clamped_temp}")
-                
+                    clamped_temp = (self._clamp_temperature(entity_id, target_temp, min_temp, max_temp)
+                                    if target_temp is not None else None)
+
                 # Create a state signature for the node using CLAMPED temp + modes
                 node_signature = {
                     "temp": clamped_temp,

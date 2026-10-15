@@ -1,3 +1,5 @@
+import { t, getLanguage } from './localize';
+import { temperatureTicks } from './temperature-scale';
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
@@ -58,22 +60,22 @@ export class KeyframeTimeline extends LitElement {
       width: 100%;
       --timeline-height: 400px;
       --timeline-height-collapsed: 100px;
-      --timeline-bg: var(--card-background-color, #1c1c1c);
+      --timeline-bg: var(--surface, var(--card-background-color, #ffffff));
       --timeline-track: var(--secondary-background-color, #2c2c2c);
       --timeline-ruler: var(--divider-color, rgba(255, 255, 255, 0.12));
       --keyframe-color: var(--accent-color, var(--primary-color, #03a9f4));
       --keyframe-selected-color: var(--success-color, #4caf50);
       --keyframe-dragging-color: var(--warning-color, #ff9800);
-      --canvas-text-primary: var(--primary-text-color, rgba(255, 255, 255, 0.9));
-      --canvas-text-secondary: var(--secondary-text-color, rgba(255, 255, 255, 0.7));
-      --canvas-grid-line: rgba(68, 68, 68, 0.3);
-      --canvas-grid-line-major: rgba(68, 68, 68, 0.5);
-      --canvas-label-bg: var(--card-background-color, rgba(0, 0, 0, 0.7));
+      --canvas-text-primary: var(--text-primary, var(--primary-text-color, #212121));
+      --canvas-text-secondary: var(--text-secondary, var(--secondary-text-color, #616161));
+      --canvas-grid-line: rgba(128, 128, 128, 0.12);
+      --canvas-grid-line-major: rgba(128, 128, 128, 0.22);
+      --canvas-label-bg: var(--timeline-bg);
       --indicator-color: var(--accent-color, #ff9800);
     }
     
     .timeline-container {
-      background: var(--background);
+      background: transparent;
       border-radius: 4px;
       padding: 0;
       user-select: none;
@@ -82,7 +84,7 @@ export class KeyframeTimeline extends LitElement {
     .timeline-title {
       font-size: 16px;
       font-weight: 600;
-      color: var(--primary-text-color, #e1e1e1);
+      color: var(--canvas-text-primary);
       cursor: pointer;
       user-select: none;
       margin-bottom: 12px;
@@ -116,8 +118,11 @@ export class KeyframeTimeline extends LitElement {
       font-size: 14px;
     }
     
-    button:hover {
-      opacity: 0.9;
+    button:hover:not(:disabled) {
+      opacity: 1;
+      background: color-mix(in srgb, var(--primary-color, #03a9f4) 12%, var(--card-background-color, #242424));
+      color: var(--primary-text-color, #eee);
+      border-color: var(--primary-color, #03a9f4);
     }
     
     button:disabled {
@@ -186,7 +191,7 @@ export class KeyframeTimeline extends LitElement {
       width: 100%;
       overflow-x: auto;
       overflow-y: hidden;
-      background: var(--timeline-track);
+      background: transparent;
       border-radius: 4px;
       transition: height 0.3s ease;
       cursor: pointer;
@@ -222,7 +227,7 @@ export class KeyframeTimeline extends LitElement {
     .timeline-canvas {
       min-width: max(100%, 800px);
       height: var(--timeline-height);
-      background: var(--timeline-track);
+      background: transparent;
       cursor: crosshair;
       position: relative;
       touch-action: none;
@@ -314,7 +319,7 @@ export class KeyframeTimeline extends LitElement {
       z-index: 12;
       min-width: 160px;
       max-width: 240px;
-      background: rgba(0, 0, 0, 0.5);
+      background: var(--timeline-bg);
       border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.2));
       border-radius: 6px;
       color: var(--canvas-text-primary);
@@ -396,8 +401,17 @@ export class KeyframeTimeline extends LitElement {
     .info {
       margin-top: 12px;
       font-size: 12px;
-      color: var(--secondary-text-color, #9e9e9e);
+      color: var(--canvas-text-secondary);
     }
+
+    .timeline-container { border-radius: 14px; }
+    .timeline-title { font-size: 14px; letter-spacing: -0.01em; }
+    .timeline-header, .timeline-controls { flex-wrap: wrap; gap: 8px; }
+    button { min-height: 36px; border-radius: 8px; font: inherit; font-size: 12px; }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 3px; }
+    .config-panel { border-radius: 12px; padding: 16px; }
+    .config-row { flex-wrap: wrap; }
+    input[type="number"], input[type="text"] { border-radius: 7px; min-height: 30px; }
   `;
 
   @property({ type: Number }) duration = 24; // hours
@@ -717,25 +731,24 @@ export class KeyframeTimeline extends LitElement {
     const graphWidth = this.canvasWidth - leftMargin - yAxisWidth - rightMargin;
     
     // Draw Y axis labels and horizontal grid lines
-    const numYLabels = this.collapsed ? 2 : 5;
+    const ticks = this.collapsed ? [this.minValue, this.maxValue] : temperatureTicks(this.minValue, this.maxValue);
     const baseFontSize = this.getBaseFontSize();
-    const yLabelOffset = 5 * dpr; // Distance from Y-axis to label text
-    const yAxisLabelOffset = -10 * dpr; // Distance from left edge to vertical Y-axis label
+    const yLabelOffset = 9 * dpr; // Distance from Y-axis to label text
+    const yAxisLabelOffset = -20 * dpr; // Distance from left edge to vertical Y-axis label
     const xAxisLabelOffset = 25 * dpr; // Distance from bottom to horizontal X-axis label
     this.ctx.fillStyle = this.getThemeColor('--canvas-text-secondary');
-    this.ctx.font = `${baseFontSize * dpr}px sans-serif`;
+    this.ctx.font = `${baseFontSize * 0.8 * dpr}px sans-serif`;
     this.ctx.textAlign = 'right';
     this.ctx.textBaseline = 'middle';
     this.ctx.strokeStyle = this.getThemeColor('--canvas-grid-line');
     this.ctx.lineWidth = 1 * dpr;
     
-    for (let i = 0; i < numYLabels; i++) {
-      const ratio = i / (numYLabels - 1);
-      const value = this.minValue + ratio * (this.maxValue - this.minValue);
+    for (const value of ticks) {
+      const ratio = (value - this.minValue) / (this.maxValue - this.minValue);
       const y = topMargin + (graphHeight * (1 - ratio));
       
       // Draw label
-      this.ctx.fillText(value.toFixed(1), leftMargin + yAxisWidth - yLabelOffset, y);
+      this.ctx.fillText(new Intl.NumberFormat(getLanguage(), { maximumFractionDigits: 2 }).format(value), leftMargin + yAxisWidth - yLabelOffset, y);
       
       // Draw horizontal grid line
       this.ctx.beginPath();
@@ -753,7 +766,7 @@ export class KeyframeTimeline extends LitElement {
       this.ctx.font = `${baseFontSize * dpr}px sans-serif`;
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(this.yAxisLabel, 0, 0);
+      this.ctx.fillText(t(this.yAxisLabel), 0, 0);
       this.ctx.restore();
     }
     
@@ -840,7 +853,7 @@ export class KeyframeTimeline extends LitElement {
       this.ctx.font = `${baseFontSize * dpr}px sans-serif`;
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'top';
-      this.ctx.fillText(this.xAxisLabel, leftMargin + yAxisWidth + (graphWidth / 2), this.canvasHeight - xAxisLabelOffset);
+      this.ctx.fillText(t(this.xAxisLabel), leftMargin + yAxisWidth + (graphWidth / 2), this.canvasHeight - xAxisLabelOffset);
     }
     
     // Draw background graphs (reference data)
@@ -1172,7 +1185,7 @@ export class KeyframeTimeline extends LitElement {
           }
           
           if (displayPoint) {
-            const label = historyGraph.label || 'Temperature';
+            const label = historyGraph.label || t('Temperature');
             const color = historyGraph.color || BACKGROUND_GRAPH_COLORS[graphIndex % BACKGROUND_GRAPH_COLORS.length];
             tooltipLines.push({ text: `${label}: ${displayPoint.value.toFixed(1)}°`, color });
           }
@@ -1311,7 +1324,7 @@ export class KeyframeTimeline extends LitElement {
     const isScrollable = !this.collapsed && this.wrapperEl && this.wrapperEl.scrollWidth > this.wrapperEl.clientWidth;
     
     // For touch devices, set up long-press detection FIRST (before any returns)
-    if (e instanceof TouchEvent) {
+    if ('touches' in e) {
       const currentTime = Date.now();
       const timeSinceLastClick = currentTime - this.lastClickTime;
       const dx = x - this.lastClickX;
@@ -1414,7 +1427,7 @@ export class KeyframeTimeline extends LitElement {
     // Update hover position for tooltip (only for mouse, not touch)
     if (e instanceof MouseEvent && !this.isDragging && !this.isPanning && this.canvas) {
       this.queueHoverTooltipRender(e.offsetX, e.offsetY);
-    } else if (e instanceof TouchEvent) {
+    } else if ('touches' in e) {
       this.hideHoverTooltip();
     }
     
@@ -1428,7 +1441,7 @@ export class KeyframeTimeline extends LitElement {
     }
     
     // Cancel long-press if moving during touch hold
-    if (e instanceof TouchEvent && this.holdTimer) {
+    if ('touches' in e && this.holdTimer) {
       const rect = this.canvas?.getBoundingClientRect();
       if (rect) {
         const scrollOffset = this.wrapperEl?.scrollLeft || 0;
@@ -1501,7 +1514,7 @@ export class KeyframeTimeline extends LitElement {
       // Snap times to nearest slot (15-minute intervals)
       const slotDuration = this.duration / this.slots;
       newStartTime = Math.round(newStartTime / slotDuration) * slotDuration;
-      newEndTime = Math.round(newEndTime / slotDuration) * slotDuration;
+      newEndTime = Math.min(23 + 59 / 60, Math.round(newEndTime / slotDuration) * slotDuration);
       
       // Update keyframes
       this.keyframes[startIndex].time = newStartTime;
@@ -1588,7 +1601,7 @@ export class KeyframeTimeline extends LitElement {
     // Update keyframe position
     const oldTime = this.keyframes[this.draggingIndex!].time;
     this.keyframes = this.keyframes.map((kf, i) => 
-      i === this.draggingIndex ? { time, value } : kf
+      i === this.draggingIndex ? { ...kf, time, value } : kf
     );
     
     // Re-sort if time changed (might change position in array)
@@ -1643,7 +1656,7 @@ export class KeyframeTimeline extends LitElement {
     }
     
     // Handle tap selection for touch devices (when not dragging)
-    if (e instanceof TouchEvent && this.draggingIndex !== null && !this.hasMoved) {
+    if ('touches' in e && this.draggingIndex !== null && !this.hasMoved) {
       // Select the keyframe
       this.selectedKeyframeIndex = this.draggingIndex;
       this.drawTimeline();
@@ -2164,39 +2177,39 @@ export class KeyframeTimeline extends LitElement {
     return html`
       <div class="timeline-container">
         ${!this.showHeader && this.title && this.allowCollapse ? html`
-          <div class="timeline-title" @click=${this.toggleCollapse} title="Click to ${this.collapsed ? 'expand' : 'collapse'}">
-            ${this.title}
+          <div class="timeline-title" @click=${this.toggleCollapse} title="${t(this.collapsed ? 'Click to expand' : 'Click to collapse')}">
+            ${t(this.title)}
           </div>
         ` : !this.showHeader && this.title ? html`
           <div class="timeline-title" style="cursor: default;">
-            ${this.title}
+            ${t(this.title)}
           </div>
         ` : ''}
         
         ${this.showHeader ? html`
           <div class="timeline-header">
-            <span @click=${this.allowCollapse ? this.toggleCollapse : null} title="${this.allowCollapse ? `Click to ${this.collapsed ? 'expand' : 'collapse'}` : ''}" style="cursor: ${this.allowCollapse ? 'pointer' : 'default'};">
-              ${this.title || `Timeline Editor (${this.duration}h • ${this.slots} slots @ ${slotMinutes.toFixed(0)}min)`}
+            <span @click=${this.allowCollapse ? this.toggleCollapse : null} title="${this.allowCollapse ? t(this.collapsed ? 'Click to expand' : 'Click to collapse') : ''}" style="cursor: ${this.allowCollapse ? 'pointer' : 'default'};">
+              ${t(this.title || `Timeline Editor (${this.duration}h • ${this.slots} slots @ ${slotMinutes.toFixed(0)}min)`)}
             </span>
             <div class="timeline-controls">
-              <button class="secondary" @click=${this.selectPrevious} ?disabled=${this.keyframes.length === 0} title="Previous keyframe">
+              <button class="secondary" @click=${this.selectPrevious} ?disabled=${this.keyframes.length === 0} title="${t("Previous keyframe")}">
                 ◀
               </button>
-              <button class="secondary" @click=${this.selectNext} ?disabled=${this.keyframes.length === 0} title="Next keyframe">
+              <button class="secondary" @click=${this.selectNext} ?disabled=${this.keyframes.length === 0} title="${t("Next keyframe")}">
                 ▶
               </button>
               ${this.allowCollapse ? html`
                 <button class="secondary" @click=${this.toggleCollapse}>
-                  ${this.collapsed ? '▼ Expand' : '▲ Collapse'}
+                  ${this.collapsed ? t('▼ Expand') : t('▲ Collapse')}
                 </button>
               ` : ''}
               <button class="secondary" @click=${this.toggleConfig}>
-                ${this.showConfig ? 'Hide' : 'Show'} Config
+                ${t(this.showConfig ? 'Hide Config' : 'Show Config')}
               </button>
               <button class="secondary" @click=${this.undo} ?disabled=${this.undoStack.length === 0}>
-                ↶ Undo
+                ${t("↶ Undo")}
               </button>
-              <button @click=${this.clearKeyframes}>Clear</button>
+              <button @click=${this.clearKeyframes}>${t("Clear")}</button>
             </div>
           </div>
         ` : ''}
@@ -2204,7 +2217,7 @@ export class KeyframeTimeline extends LitElement {
         ${this.showConfig ? html`
           <div class="config-panel">
             <div class="config-row">
-              <label>Duration (hours):</label>
+              <label>${t("Duration (hours):")}</label>
               <input 
                 type="number" 
                 min="1" 
@@ -2214,7 +2227,7 @@ export class KeyframeTimeline extends LitElement {
               />
             </div>
             <div class="config-row">
-              <label>Time Slots:</label>
+              <label>${t("Time Slots:")}</label>
               <input 
                 type="number" 
                 min="1" 
@@ -2224,19 +2237,19 @@ export class KeyframeTimeline extends LitElement {
               />
             </div>
             <div class="config-row">
-              <label>Prev Day End:</label>
+              <label>${t("Prev Day End:")}</label>
               <input 
                 type="number" 
                 min="${this.minValue}" 
                 max="${this.maxValue}" 
                 step="0.01"
-                placeholder="Auto"
+                placeholder="${t("Auto")}"
                 .value=${this.previousDayEndValue?.toString() || ''}
                 @change=${this.updatePreviousDayEnd}
               />
             </div>
             <div class="config-row">
-              <label>Min Value:</label>
+              <label>${t("Min Value:")}</label>
               <input 
                 type="number" 
                 step="0.1"
@@ -2245,7 +2258,7 @@ export class KeyframeTimeline extends LitElement {
               />
             </div>
             <div class="config-row">
-              <label>Max Value:</label>
+              <label>${t("Max Value:")}</label>
               <input 
                 type="number" 
                 step="0.1"
@@ -2254,30 +2267,30 @@ export class KeyframeTimeline extends LitElement {
               />
             </div>
             <div class="config-row">
-              <label>Snap Value:</label>
+              <label>${t("Snap Value:")}</label>
               <input 
                 type="number" 
                 min="0"
                 step="0.01"
-                placeholder="None"
+                placeholder="${t("None")}"
                 .value=${this.snapValue > 0 ? this.snapValue.toString() : ''}
                 @change=${this.updateSnapValue}
               />
             </div>
             <div class="config-row">
-              <label>X Axis Label:</label>
+              <label>${t("X Axis Label:")}</label>
               <input 
                 type="text" 
-                placeholder="e.g. Time"
+                placeholder="${t("e.g. Time")}"
                 .value=${this.xAxisLabel}
                 @input=${this.updateXAxisLabel}
               />
             </div>
             <div class="config-row">
-              <label>Y Axis Label:</label>
+              <label>${t("Y Axis Label:")}</label>
               <input 
                 type="text" 
-                placeholder="e.g. Value"
+                placeholder="${t("e.g. Value")}"
                 .value=${this.yAxisLabel}
                 @input=${this.updateYAxisLabel}
               />
@@ -2290,14 +2303,14 @@ export class KeyframeTimeline extends LitElement {
             <div class="graph-legend ${this.legendCollapsed ? 'collapsed' : ''}">
               <div class="graph-legend-header" @click=${this.toggleLegend}>
                 <span class="graph-legend-toggle">▶</span>
-                <span>Legend</span>
+                <span>${t("Legend")}</span>
               </div>
               ${!this.legendCollapsed ? html`
                 <div class="graph-legend-items">
                   ${this.backgroundGraphs.map((bgGraph, graphIndex) => html`
-                    <div class="graph-legend-item" title=${bgGraph.label || `Entity ${graphIndex + 1}`}>
+                    <div class="graph-legend-item" title=${bgGraph.label || t(`Entity ${graphIndex + 1}`)}>
                       <span class="graph-legend-swatch" style="background: ${this.getBackgroundGraphColor(bgGraph, graphIndex)};"></span>
-                      <span class="graph-legend-label">${bgGraph.label || `Entity ${graphIndex + 1}`}</span>
+                      <span class="graph-legend-label">${bgGraph.label || t(`Entity ${graphIndex + 1}`)}</span>
                     </div>
                   `)}
                 </div>
@@ -2322,7 +2335,7 @@ export class KeyframeTimeline extends LitElement {
               ></canvas>
               <div class="cursor-tooltip" hidden></div>
             </div>
-            ${this.collapsed ? html`<div class="expand-hint">Click to expand</div>` : ''}
+            ${this.collapsed ? html`<div class="expand-hint">${t("Click to expand")}</div>` : ''}
           </div>
           ${this.showScrollNavLeft ? html`
             <div class="scroll-nav left" @click=${this.scrollToStart}>◀</div>
@@ -2333,7 +2346,7 @@ export class KeyframeTimeline extends LitElement {
         </div>
         
         <div class="info">
-          Double-click to add • Drag to move • Right-click/hold to delete • ${this.keyframes.length} keyframes
+          ${t("Double-click to add • Drag to move • Right-click/hold to delete")} • ${this.keyframes.length} ${t("keyframes")}
         </div>
       </div>
     `;

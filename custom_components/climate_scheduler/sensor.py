@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -293,7 +292,7 @@ class ColdestEntitySensor(SensorEntity):
         # Let Home Assistant manage the `entity_id` from the `unique_id`
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
         self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+        self._attr_native_unit_of_measurement = hass.config.units.temperature_unit
         self._attr_icon = "mdi:snowflake"
         self._attr_native_value = None
         self._coldest_entity_id = None
@@ -382,7 +381,7 @@ class WarmestEntitySensor(SensorEntity):
         # Let Home Assistant manage the `entity_id` from the `unique_id`
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
         self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+        self._attr_native_unit_of_measurement = hass.config.units.temperature_unit
         self._attr_icon = "mdi:fire"
         self._attr_native_value = None
         self._warmest_entity_id = None

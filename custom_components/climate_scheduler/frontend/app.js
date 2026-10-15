@@ -1,3 +1,4 @@
+const csT = (message) => window.climateSchedulerLocalize?.(message) ?? message;
 /**
  * Main Application Logic
  * Connects the UI components with the Home Assistant API
@@ -132,19 +133,21 @@ let currentSchedule = []; // Currently loaded schedule nodes with all properties
 let isLoadingSchedule = false; // Flag to prevent auto-save during schedule loading
 let isSaveInProgress = false; // Flag to prevent concurrent saves
 let pendingSaveNeeded = false; // Flag to indicate a save was skipped and needs to be retried
+const pendingScheduleSaves = new Map();
 let saveTimeout = null; // Timeout for debouncing save operations
 const SAVE_DEBOUNCE_MS = 300; // Wait 300ms after last change before saving
 let serverTimeZone = null; // Store the Home Assistant server timezone
 
 function flushPendingSaveIfNeeded() {
-    if (!isLoadingSchedule && !isSaveInProgress && pendingSaveNeeded) {
+    if (!isLoadingSchedule && !isSaveInProgress && pendingScheduleSaves.size) {
         pendingSaveNeeded = false;
-        saveSchedule();
+        performSave();
     }
 }
 
 // Debug logging function
 function debugLog(message, type = 'info') {
+    message = csT(message);
     const timestamp = new Date().toLocaleTimeString();
 
     const shouldMirrorToConsole = typeof message === 'string' && (message.includes('[Undo]') || message.includes('[Dialog]'));
@@ -172,6 +175,7 @@ function debugLog(message, type = 'info') {
 }
 
 function showToast(message, type = 'info', duration = 4000) {
+    message = csT(message);
     const root = getDocumentRoot();
     let container = root.querySelector('.toast-container');
     
@@ -274,18 +278,18 @@ async function initApp() {
         if (container) {
             container.innerHTML = `
                 <div style="padding: 20px; text-align: center;">
-                    <h2>❌ Connection Failed</h2>
-                    <p style="color: #666; margin: 20px 0;">Could not connect to Home Assistant</p>
+                    <h2>${csT("❌ Connection Failed")}</h2>
+                    <p style="color: #666; margin: 20px 0;">${csT("Could not connect to Home Assistant")}</p>
                     <details style="text-align: left; max-width: 600px; margin: 20px auto; padding: 10px; background: #f5f5f5; border-radius: 8px;">
-                        <summary style="cursor: pointer; font-weight: bold;">Technical Details</summary>
-                        <pre style="margin-top: 10px; overflow-x: auto;">${error.message}\n\n${error.stack}</pre>
+                        <summary style="cursor: pointer; font-weight: bold;">${csT("Technical Details")}</summary>
+                        <pre style="margin-top: 10px; overflow-x: auto;">${csT(error.message)}\n\n${error.stack}</pre>
                     </details>
                     <p style="margin-top: 20px;">
-                        <strong>Troubleshooting:</strong><br>
-                        • Try refreshing the page (pull down on mobile)<br>
-                        • Check if you're logged into Home Assistant<br>
-                        • Restart the Home Assistant app<br>
-                        • Check Settings → Companion App → Debugging
+                        <strong>${csT("Troubleshooting:")}</strong><br>
+                        ${csT("• Try refreshing the page (pull down on mobile)")}<br>
+                        ${csT("• Check if you're logged into Home Assistant")}<br>
+                        ${csT("• Restart the Home Assistant app")}<br>
+                        ${csT("• Check Settings → Companion App → Debugging")}
                     </p>
                 </div>
             `;
@@ -301,7 +305,7 @@ async function loadClimateEntities() {
         // Entity list rendered
     } catch (error) {
         console.error('Failed to load climate entities:', error);
-        alert('Failed to load climate entities');
+        await schedulerAlert(csT('Failed to load climate entities'));
     }
 }
 
@@ -391,7 +395,7 @@ function renderGroups() {
     }
     
     if (groupNames.length === 0) {
-        groupsList.innerHTML = '<p style="color: var(--secondary-text-color); padding: 16px; text-align: center;">No groups created yet</p>';
+        groupsList.innerHTML = `<p style="color: var(--secondary-text-color); padding: 16px; text-align: center;">${csT("No groups created yet")}</p>`;
         return;
     }
     
@@ -467,7 +471,7 @@ function renderIgnoredEntities() {
     ignoredContainer.innerHTML = '';
     
     if (unmonitoredEntities.length === 0) {
-        ignoredContainer.innerHTML = '<p style="color: var(--secondary-text-color); padding: 16px; text-align: center;">No unmonitored entities</p>';
+        ignoredContainer.innerHTML = `<p style="color: var(--secondary-text-color); padding: 16px; text-align: center;">${csT("No unmonitored entities")}</p>`;
         return;
     }
     
@@ -481,19 +485,19 @@ function renderIgnoredEntities() {
         item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer;';
         
         const nameSpan = document.createElement('span');
-        nameSpan.textContent = friendlyName;
+        nameSpan.textContent = friendlyName === entityId ? entityId : `${friendlyName} (${entityId})`;
         nameSpan.style.flex = '1';
         
         const buttonContainer = document.createElement('div');
         buttonContainer.style.cssText = 'display: flex; gap: 8px;';
         
         const unignoreBtn = document.createElement('button');
-        unignoreBtn.textContent = 'Monitor';
+        unignoreBtn.textContent = csT('Monitor');
         unignoreBtn.className = 'btn-secondary-outline';
         unignoreBtn.style.cssText = 'padding: 4px 12px; font-size: 0.85rem;';
         unignoreBtn.onclick = async (e) => {
             e.stopPropagation();
-            if (confirm(`Start monitoring ${friendlyName}?\n\nThis entity will be managed by the scheduler again.`)) {
+            if (await schedulerConfirm(`Start monitoring ${friendlyName}?\n\nThis entity will be managed by the scheduler again.`)) {
                 try {
                     await haAPI.setIgnored(entityId, false);
                     
@@ -518,7 +522,7 @@ function renderIgnoredEntities() {
         };
         
         const addToGroupBtn = document.createElement('button');
-        addToGroupBtn.textContent = 'Add to Group';
+        addToGroupBtn.textContent = csT('Add to Group');
         addToGroupBtn.className = 'btn-primary-outline';
         addToGroupBtn.style.cssText = 'padding: 4px 12px; font-size: 0.85rem;';
         addToGroupBtn.onclick = async (e) => {
@@ -537,7 +541,7 @@ function renderIgnoredEntities() {
                 // Show the modal (will populate groups in existing handler)
                 showAddToGroupModal(entityId);
             } else {
-                showToast(`Failed to show group selection modal`, 'error');
+                showToast(csT(`Failed to show group selection modal`), 'error');
             }
         };
         
@@ -572,7 +576,7 @@ function createGroupContainer(groupName, groupData) {
     
     const toggleIcon = document.createElement('span');
     toggleIcon.className = 'group-toggle-icon';
-    toggleIcon.textContent = '▼';
+    toggleIcon.textContent = csT('▼');
     toggleIcon.style.transform = 'rotate(-90deg)';
     
     const title = document.createElement('span');
@@ -636,7 +640,7 @@ function createGroupContainer(groupName, groupData) {
             showToast(`Switched ${groupName} to profile: ${newProfile}`, 'success');
         } catch (error) {
             console.error('Failed to switch profile:', error);
-            showToast('Failed to switch profile', 'error');
+            showToast(csT('Failed to switch profile'), 'error');
             // Revert dropdown
             profileDropdown.value = activeProfile;
         }
@@ -648,7 +652,7 @@ function createGroupContainer(groupName, groupData) {
     // Enable/disable toggle - reuse the styled toggle switch from settings
     const toggleLabel = document.createElement('label');
     toggleLabel.className = 'toggle-switch';
-    toggleLabel.title = 'Enable schedule';
+    toggleLabel.title = csT('Enable schedule');
 
     const toggleInput = document.createElement('input');
     toggleInput.type = 'checkbox';
@@ -689,9 +693,9 @@ function createGroupContainer(groupName, groupData) {
     actions.appendChild(toggleLabel);
     
     const renameBtn = document.createElement('button');
-    renameBtn.textContent = '✎';
+    renameBtn.textContent = csT('✎');
     renameBtn.className = 'btn-icon';
-    renameBtn.title = 'Rename group';
+    renameBtn.title = csT('Rename group');
     renameBtn.style.cssText = 'padding: 4px 8px; font-size: 1rem; background: none; border: none; cursor: pointer; color: var(--text-secondary); transform: scaleX(-1);';
     renameBtn.onclick = (e) => {
         e.stopPropagation();
@@ -789,7 +793,7 @@ async function loadKeyframeTimeline() {
         return true;
     } catch (error) {
         console.error('Failed to load keyframe-timeline.js:', error);
-        showToast('Failed to load canvas graph component', 'error');
+        showToast(csT('Failed to load canvas graph component'), 'error');
         return false;
     }
 }
@@ -844,8 +848,9 @@ function keyframesToScheduleNodes(keyframes) {
     return sortedKeyframes.map((kf) => {
         // Clamp time to 23:59 (23.9833 hours) to prevent 24:00 which would clash with 00:00 on next day
         const clampedTime = Math.min(kf.time, 23 + (59/60));
-        const hours = Math.floor(clampedTime);
-        const minutes = Math.round((clampedTime - hours) * 60);
+        const totalMinutes = Math.max(0, Math.min(1439, Math.round(clampedTime * 60)));
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
         const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         
         // Find existing node in currentSchedule to preserve properties
@@ -934,7 +939,7 @@ function setGraphHistoryData(historyDataArray) {
             graph.backgroundGraphs = [{
                 keyframes: keyframes,
                 color: '#2196f380',
-                label: 'Temperature'
+                label: csT('Temperature')
             }];
         }
 }
@@ -1397,20 +1402,20 @@ async function editGroupSchedule(groupName, day = null) {
         const editorInstance = createTimelineEditor({
             idPrefix: 'main',
             buttons: [
-                { id: 'graph-prev-btn', text: '◀', title: 'Previous keyframe' },
-                { id: 'graph-next-btn', text: '▶', title: 'Next keyframe' },
-                { id: 'graph-copy-btn', text: 'Copy', title: 'Copy schedule' },
-                { id: 'graph-paste-btn', text: 'Paste', title: 'Paste schedule', disabled: true },
-                { id: 'graph-undo-btn', text: 'Undo', title: 'Undo last change' },
-                { id: 'advance-schedule-btn', text: 'Advance', title: 'Advance to next scheduled node' },
-                { id: 'save-schedule-btn', text: 'Save', title: 'Save schedule', className: 'btn-quick-action btn-primary' }
+                { id: 'graph-prev-btn', text: '◀', title: csT('Previous keyframe') },
+                { id: 'graph-next-btn', text: '▶', title: csT('Next keyframe') },
+                { id: 'graph-copy-btn', text: csT('Copy'), title: csT('Copy schedule') },
+                { id: 'graph-paste-btn', text: csT('Paste'), title: csT('Paste schedule'), disabled: true },
+                { id: 'graph-undo-btn', text: csT('Undo'), title: csT('Undo last change') },
+                { id: 'advance-schedule-btn', text: csT('Advance'), title: csT('Advance to next scheduled node') },
+                { id: 'save-schedule-btn', text: csT('Save'), title: csT('Save schedule'), className: 'btn-quick-action btn-primary' }
             ],
             minValue: minTempSetting !== null ? minTempSetting : (temperatureUnit === '°F' ? 41 : 5),
             maxValue: maxTempSetting !== null ? maxTempSetting : (temperatureUnit === '°F' ? 86 : 30),
             snapValue: graphSnapStep,
             title: getScheduleTitle(),
             yAxisLabel: `Temperature (${temperatureUnit})`,
-            xAxisLabel: `Time of Day (24hr)`,
+            xAxisLabel: csT(`Time of Day (24hr)`),
             showCurrentTime: true,
             tooltipMode: tooltipMode,
             showHeader: false,
@@ -1627,7 +1632,7 @@ function createSettingsPanel(groupData, editor) {
     toggleHeader.className = 'schedule-settings-toggle';
     toggleHeader.innerHTML = `
         <span class="toggle-icon" style="transform: rotate(-90deg);">▼</span>
-        <span class="toggle-text">Schedule Settings</span>
+        <span class="toggle-text">${csT("Schedule Settings")}</span>
     `;
     toggleHeader.style.cursor = 'pointer';
     toggleHeader.style.userSelect = 'none';
@@ -1643,22 +1648,22 @@ function createSettingsPanel(groupData, editor) {
     // Add editor controls (buttons)
     let controlsHTML = `
         <div class="editor-controls">
-            <button id="undo-btn" class="btn-secondary-outline schedule-btn" title="Undo last change (Ctrl+Z)" disabled>Undo</button>
-            <button id="copy-schedule-btn" class="btn-secondary-outline schedule-btn" title="Copy current schedule">Copy Schedule</button>
-            <button id="paste-schedule-btn" class="btn-secondary-outline schedule-btn" title="Paste copied schedule" disabled>Paste Schedule</button>
-            <button id="clear-advance-history-btn" class="btn-secondary-outline schedule-btn" title="Clear advance history markers">Clear Advance History</button>`;
+            <button id="undo-btn" class="btn-secondary-outline schedule-btn" title="${csT("Undo last change (Ctrl+Z)")}" disabled>${csT("Undo")}</button>
+            <button id="copy-schedule-btn" class="btn-secondary-outline schedule-btn" title="${csT("Copy current schedule")}">${csT("Copy Schedule")}</button>
+            <button id="paste-schedule-btn" class="btn-secondary-outline schedule-btn" title="${csT("Paste copied schedule")}" disabled>${csT("Paste Schedule")}</button>
+            <button id="clear-advance-history-btn" class="btn-secondary-outline schedule-btn" title="${csT("Clear advance history markers")}">${csT("Clear Advance History")}</button>`;
     
     // Only show unmonitor button for single-entity groups
     if (isSingleEntityGroup) {
-        controlsHTML += `<button id="ignore-entity-btn" class="btn-secondary-outline schedule-btn" title="Stop monitoring this thermostat">Unmonitor</button>`;
+        controlsHTML += `<button id="ignore-entity-btn" class="btn-secondary-outline schedule-btn" title="${csT("Stop monitoring this thermostat")}">${csT("Unmonitor")}</button>`;
     }
     
     controlsHTML += `
-            <button id="clear-schedule-btn" class="btn-danger-outline schedule-btn" title="Clear entire schedule">Clear Schedule</button>
+            <button id="clear-schedule-btn" class="btn-danger-outline schedule-btn" title="${csT("Clear entire schedule")}">${csT("Clear Schedule")}</button>
             <label class="toggle-switch">
                 <input type="checkbox" id="schedule-enabled">
                 <span class="slider"></span>
-                <span class="toggle-label">Enabled</span>
+                <span class="toggle-label">${csT("Enabled")}</span>
             </label>
         </div>
     `;
@@ -1702,8 +1707,8 @@ function showEditingProfileIndicator(editingProfile, activeProfile) {
         }
         if (indicator) {
             indicator.innerHTML = `
-                <span>Editing Profile: ${editingProfile}</span>
-                <button id="close-editing-profile" style="padding: 4px 12px; cursor: pointer; background: var(--primary-color); color: var(--text-primary-color); border: none; border-radius: 4px; font-weight: normal;">Done</button>
+                <span>${csT(`Editing Profile: ${editingProfile}`)}</span>
+                <button id="close-editing-profile" style="padding: 4px 12px; cursor: pointer; background: var(--primary-color); color: var(--text-primary-color); border: none; border-radius: 4px; font-weight: normal;">${csT("Done")}</button>
             `;
             indicator.style.display = 'flex';
             
@@ -1737,7 +1742,7 @@ function showEditingProfileIndicator(editingProfile, activeProfile) {
                     
                     // Hide the indicator
                     showEditingProfileIndicator(null, activeProfile);
-                    showToast('Returned to active profile', 'info');
+                    showToast(csT('Returned to active profile'), 'info');
                 };
             }
         }
@@ -1827,21 +1832,21 @@ async function setupProfileHandlers(container, groupData) {
                         const editorInstance = createTimelineEditor({
                             idPrefix: 'profile',
                             buttons: [
-                                { id: 'graph-prev-btn', text: '◀', title: 'Previous keyframe' },
-                                { id: 'graph-next-btn', text: '▶', title: 'Next keyframe' },
-                                { id: 'graph-copy-btn', text: 'Copy', title: 'Copy schedule' },
-                                { id: 'graph-paste-btn', text: 'Paste', title: 'Paste schedule', disabled: true },
-                                { id: 'graph-undo-btn', text: 'Undo', title: 'Undo last change', disabled: true },
-                                { id: 'graph-clear-btn', text: 'Clear', title: 'Clear all nodes' },
-                                { id: 'save-schedule-btn', text: 'Save', title: 'Save schedule', className: 'btn-quick-action btn-primary' },
-                                { id: 'close-btn', text: 'Close', title: 'Close profile editor' }
+                                { id: 'graph-prev-btn', text: '◀', title: csT('Previous keyframe') },
+                                { id: 'graph-next-btn', text: '▶', title: csT('Next keyframe') },
+                                { id: 'graph-copy-btn', text: csT('Copy'), title: csT('Copy schedule') },
+                                { id: 'graph-paste-btn', text: csT('Paste'), title: csT('Paste schedule'), disabled: true },
+                                { id: 'graph-undo-btn', text: csT('Undo'), title: csT('Undo last change'), disabled: true },
+                                { id: 'graph-clear-btn', text: csT('Clear'), title: csT('Clear all nodes') },
+                                { id: 'save-schedule-btn', text: csT('Save'), title: csT('Save schedule'), className: 'btn-quick-action btn-primary' },
+                                { id: 'close-btn', text: csT('Close'), title: csT('Close profile editor') }
                             ],
                             minValue: minTempSetting !== null ? minTempSetting : (temperatureUnit === '°F' ? 41 : 5),
                             maxValue: maxTempSetting !== null ? maxTempSetting : (temperatureUnit === '°F' ? 86 : 30),
                             snapValue: graphSnapStep,
                             title: `Editing Profile: ${selectedProfile}`,
                             yAxisLabel: `Temperature (${temperatureUnit})`,
-                            xAxisLabel: `Time of Day (24hr)`,
+                            xAxisLabel: csT(`Time of Day (24hr)`),
                             showCurrentTime: false,
                             tooltipMode: tooltipMode || 'hover',
                             showHeader: false,
@@ -1953,19 +1958,19 @@ async function setupProfileHandlers(container, groupData) {
                             
                             if (mode === 'individual') {
                                 const days = [
-                                    { value: 'mon', label: 'Mon' },
-                                    { value: 'tue', label: 'Tue' },
-                                    { value: 'wed', label: 'Wed' },
-                                    { value: 'thu', label: 'Thu' },
-                                    { value: 'fri', label: 'Fri' },
-                                    { value: 'sat', label: 'Sat' },
-                                    { value: 'sun', label: 'Sun' }
+                                    { value: 'mon', label: csT('Mon') },
+                                    { value: 'tue', label: csT('Tue') },
+                                    { value: 'wed', label: csT('Wed') },
+                                    { value: 'thu', label: csT('Thu') },
+                                    { value: 'fri', label: csT('Fri') },
+                                    { value: 'sat', label: csT('Sat') },
+                                    { value: 'sun', label: csT('Sun') }
                                 ];
                                 
                                 days.forEach(dayInfo => {
                                     const btn = document.createElement('button');
                                     btn.className = 'day-period-btn';
-                                    btn.textContent = dayInfo.label;
+                                    btn.textContent = csT(dayInfo.label);
                                     btn.dataset.day = dayInfo.value;
                                     if (activeDay === dayInfo.value) {
                                         btn.classList.add('active');
@@ -1980,14 +1985,14 @@ async function setupProfileHandlers(container, groupData) {
                                 });
                             } else if (mode === '5/2') {
                                 const periods = [
-                                    { value: 'weekday', label: 'Weekday' },
-                                    { value: 'weekend', label: 'Weekend' }
+                                    { value: 'weekday', label: csT('Weekday') },
+                                    { value: 'weekend', label: csT('Weekend') }
                                 ];
                                 
                                 periods.forEach(period => {
                                     const btn = document.createElement('button');
                                     btn.className = 'day-period-btn';
-                                    btn.textContent = period.label;
+                                    btn.textContent = csT(period.label);
                                     btn.dataset.day = period.value;
                                     if (activeDay === period.value) {
                                         btn.classList.add('active');
@@ -2047,7 +2052,7 @@ async function setupProfileHandlers(container, groupData) {
                                 await persistProfileSchedule(newMode);
                             } catch (error) {
                                 console.error('Failed to save mode change:', error);
-                                showToast('Failed to save mode change', 'error');
+                                showToast(csT('Failed to save mode change'), 'error');
                             }
                         });
                         
@@ -2090,7 +2095,7 @@ async function setupProfileHandlers(container, groupData) {
                             setProfileEditingContext();
                             copiedSchedule = [...timeline.keyframes];
                             pasteBtn.disabled = false;
-                            showToast('Schedule copied', 'success');
+                            showToast(csT('Schedule copied'), 'success');
                         };
                         
                         // Paste button handler
@@ -2099,14 +2104,14 @@ async function setupProfileHandlers(container, groupData) {
                             if (copiedSchedule && copiedSchedule.length > 0) {
                                 timeline.keyframes = [...copiedSchedule];
                                 syncProfileScheduleFromTimeline();
-                                showToast('Schedule pasted', 'success');
+                                showToast(csT('Schedule pasted'), 'success');
                             }
                         };
                         
                         // Clear button handler
-                        clearBtn.onclick = () => {
+                        clearBtn.onclick = async () => {
                             setProfileEditingContext();
-                            if (confirm('Clear all nodes for this profile?')) {
+                            if (await schedulerConfirm(csT('Clear all nodes for this profile?'))) {
                                 timeline.keyframes = [];
                                 profileCurrentSchedule = [];
                                 currentSchedule = [];
@@ -2118,10 +2123,10 @@ async function setupProfileHandlers(container, groupData) {
                             try {
                                 await persistProfileSchedule();
                                 
-                                showToast('Profile saved successfully', 'success');
+                                showToast(csT('Profile saved successfully'), 'success');
                             } catch (error) {
                                 console.error('Failed to save profile changes:', error);
-                                showToast('Failed to save profile changes', 'error');
+                                showToast(csT('Failed to save profile changes'), 'error');
                             }
                         };
                         
@@ -2150,7 +2155,7 @@ async function setupProfileHandlers(container, groupData) {
                                 await persistProfileSchedule();
                             } catch (error) {
                                 console.error('Failed to save profile changes:', error);
-                                showToast('Failed to save profile changes', 'error');
+                                showToast(csT('Failed to save profile changes'), 'error');
                             }
                         };
                         
@@ -2180,7 +2185,7 @@ async function setupProfileHandlers(container, groupData) {
                         });
                     }
                 } else {
-                    showToast('Selected profile is unavailable for the target schedule', 'warning');
+                    showToast(csT('Selected profile is unavailable for the target schedule'), 'warning');
                 }
             } catch (error) {
                 console.error('Failed to load profile:', error);
@@ -2195,11 +2200,11 @@ async function setupProfileHandlers(container, groupData) {
         newProfileBtn.onclick = async () => {
             const selectedTargetGroup = getProfileEditorTargetGroup(container);
             if (!selectedTargetGroup) {
-                showToast('Select a monitored schedule first', 'warning');
+                showToast(csT('Select a monitored schedule first'), 'warning');
                 return;
             }
 
-            const profileName = prompt('Enter name for new profile:');
+            const profileName = await schedulerPrompt(csT('Enter name for new profile:'));
             if (!profileName || profileName.trim() === '') return;
             
             try {
@@ -2225,7 +2230,7 @@ async function setupProfileHandlers(container, groupData) {
         renameProfileBtn.onclick = async () => {
             const selectedTargetGroup = getProfileEditorTargetGroup(container);
             if (!selectedTargetGroup) {
-                showToast('Select a monitored schedule first', 'warning');
+                showToast(csT('Select a monitored schedule first'), 'warning');
                 return;
             }
 
@@ -2233,7 +2238,7 @@ async function setupProfileHandlers(container, groupData) {
             const currentProfile = dropdown?.value;
             if (!currentProfile) return;
             
-            const newName = prompt(`Rename profile "${currentProfile}" to:`, currentProfile);
+            const newName = await schedulerPrompt(`Rename profile "${currentProfile}" to:`, currentProfile);
             if (!newName || newName.trim() === '' || newName === currentProfile) return;
             
             try {
@@ -2259,7 +2264,7 @@ async function setupProfileHandlers(container, groupData) {
         deleteProfileBtn.onclick = async () => {
             const selectedTargetGroup = getProfileEditorTargetGroup(container);
             if (!selectedTargetGroup) {
-                showToast('Select a monitored schedule first', 'warning');
+                showToast(csT('Select a monitored schedule first'), 'warning');
                 return;
             }
 
@@ -2267,7 +2272,7 @@ async function setupProfileHandlers(container, groupData) {
             const currentProfile = dropdown?.value;
             if (!currentProfile) return;
             
-            if (!confirm(`Delete profile "${currentProfile}"?`)) return;
+            if (!await schedulerConfirm(`Delete profile "${currentProfile}"?`)) return;
             
             try {
                 await haAPI.deleteProfile(selectedTargetGroup, currentProfile);
@@ -2306,7 +2311,7 @@ async function loadProfiles(container, targetId) {
         // Add placeholder option
         const placeholderOption = document.createElement('option');
         placeholderOption.value = '';
-        placeholderOption.textContent = 'Choose Profile to Edit';
+        placeholderOption.textContent = csT('Choose Profile to Edit');
         placeholderOption.disabled = true;
         placeholderOption.selected = true;
         dropdown.appendChild(placeholderOption);
@@ -2373,16 +2378,14 @@ function createPresetOnlyNotice(entityIds, groupName) {
     message.style.flex = '1';
     
     const count = presetOnlyEntities.length;
-    const entityWord = count === 1 ? 'entity' : 'entities';
-    const hasWord = count === 1 ? 'has' : 'have';
     
     message.innerHTML = `
-        <strong>⚠️ Preset-Only ${count === 1 ? 'Entity' : 'Entities'} Detected</strong><br>
-        ${count} ${entityWord} in this group ${hasWord} no temperature sensor and will only receive mode changes (HVAC, fan, swing, preset).
+        <strong>${csT("⚠️ Preset-Only Devices Detected")}</strong><br>
+        ${csT(`${count} devices in this group have no temperature sensor and will only receive mode changes (HVAC, fan, swing, preset).`)}
     `;
     
     const dismissBtn = document.createElement('button');
-    dismissBtn.textContent = '✕';
+    dismissBtn.textContent = csT('✕');
     dismissBtn.style.cssText = `
         background: transparent;
         border: none;
@@ -2394,7 +2397,7 @@ function createPresetOnlyNotice(entityIds, groupName) {
         opacity: 0.8;
         transition: opacity 0.2s;
     `;
-    dismissBtn.title = 'Dismiss this notice';
+    dismissBtn.title = csT('Dismiss this notice');
     
     dismissBtn.addEventListener('mouseenter', () => {
         dismissBtn.style.opacity = '1';
@@ -2429,7 +2432,7 @@ function createGroupMembersTable(entityIds) {
         container.className = 'group-members-container';
         container.innerHTML = `
             <div style="padding: 16px; text-align: center; color: var(--secondary-text-color); font-style: italic;">
-                Virtual Schedule (No Entities) - Events Only
+                ${csT("Virtual Schedule (No Entities) - Events Only")}
             </div>
         `;
         return container;
@@ -2444,7 +2447,7 @@ function createGroupMembersTable(entityIds) {
     toggleHeader.className = 'group-members-toggle';
     toggleHeader.innerHTML = `
         <span class="toggle-icon">▶</span>
-        <span class="toggle-text">Member Entities (${entityIds.length})</span>
+        <span class="toggle-text">${csT(`Member Entities (${entityIds.length})`)}</span>
     `;
     
     // Create table
@@ -2486,9 +2489,9 @@ function createGroupMembersTable(entityIds) {
                 const scheduledCell = row.children[3];
                 if (groupSchedule.length > 0) {
                     const scheduledTemp = interpolateTemperature(groupSchedule, currentTime);
-                    scheduledCell.textContent = (Number.isFinite(scheduledTemp)) ? `${scheduledTemp.toFixed(1)}${temperatureUnit}` : 'No Change';
+                    scheduledCell.textContent = (Number.isFinite(scheduledTemp)) ? `${scheduledTemp.toFixed(1)}${temperatureUnit}` : csT('No Change');
                 } else {
-                    scheduledCell.textContent = '--';
+                    scheduledCell.textContent = csT('--');
                 }
             });
             
@@ -2505,7 +2508,7 @@ function createGroupMembersTable(entityIds) {
     // Create header
     const header = document.createElement('div');
     header.className = 'group-members-header';
-    header.innerHTML = '<span>Name</span><span>Current</span><span>Target</span><span>Scheduled</span><span style="text-align: center;">Actions</span>';
+    header.innerHTML = `<span>${csT("Name")}</span><span>${csT("Current")}</span><span>${csT("Target")}</span><span>${csT("Scheduled")}</span><span style="text-align: center;">${csT("Actions")}</span>`;
     table.appendChild(header);
     
     // Get current time for scheduled temp calculation
@@ -2526,6 +2529,7 @@ function createGroupMembersTable(entityIds) {
         
         const nameCell = document.createElement('span');
         nameCell.textContent = entity.attributes?.friendly_name || entityId;
+        nameCell.title = entityId;
         
         const currentCell = document.createElement('span');
         const currentTemp = entity.attributes?.current_temperature;
@@ -2538,9 +2542,9 @@ function createGroupMembersTable(entityIds) {
         const scheduledCell = document.createElement('span');
         if (groupSchedule.length > 0) {
             const scheduledTemp = interpolateTemperature(groupSchedule, currentTime);
-            scheduledCell.textContent = (Number.isFinite(scheduledTemp)) ? `${scheduledTemp.toFixed(1)}${temperatureUnit}` : 'No Change';
+            scheduledCell.textContent = (Number.isFinite(scheduledTemp)) ? `${scheduledTemp.toFixed(1)}${temperatureUnit}` : csT('No Change');
         } else {
-            scheduledCell.textContent = '--';
+            scheduledCell.textContent = csT('--');
         }
         
         // Add action buttons cell
@@ -2553,7 +2557,7 @@ function createGroupMembersTable(entityIds) {
         const moveBtn = document.createElement('button');
         moveBtn.className = 'btn-icon-small move-entity-btn';
         moveBtn.innerHTML = '⇄';
-        moveBtn.title = 'Move to another group';
+        moveBtn.title = csT('Move to another group');
         moveBtn.onclick = (e) => {
             e.stopPropagation();
             const groupName = currentGroup;
@@ -2565,7 +2569,7 @@ function createGroupMembersTable(entityIds) {
         const removeBtn = document.createElement('button');
         removeBtn.className = 'btn-icon-small remove-entity-btn';
         removeBtn.innerHTML = '🗑';
-        removeBtn.title = 'Remove from group';
+        removeBtn.title = csT('Remove from group');
         removeBtn.onclick = (e) => {
             e.stopPropagation();
             // Get the group name from the current context
@@ -2635,7 +2639,7 @@ async function toggleEntityInclusion(entityId, enable = true) {
                 entitySchedules.set(entityId, schedule.nodes);
             }
             
-            showToast('Entity enabled', 'success');
+            showToast(csT('Entity enabled'), 'success');
         } else {
             // Disable entity - mark as ignored instead of deleting
             try {
@@ -2644,7 +2648,7 @@ async function toggleEntityInclusion(entityId, enable = true) {
                 // Remove from local Map only after successfully marked as ignored
                 entitySchedules.delete(entityId);
                 
-                showToast('Entity ignored', 'success');
+                showToast(csT('Entity ignored'), 'success');
             } catch (ignoreError) {
                 throw ignoreError; // Re-throw to be caught by outer catch
             }
@@ -2671,7 +2675,7 @@ async function removeEntityFromGroup(groupName, entityId) {
     const entity = climateEntities.find(e => e.entity_id === entityId);
     const entityName = entity?.attributes?.friendly_name || entityId;
     
-    if (!confirm(`Remove "${entityName}" from group "${groupName}"?\n\nThe entity will return to your active entities list.`)) {
+    if (!await schedulerConfirm(`Remove "${entityName}" from group "${groupName}"?\n\nThe entity will return to your active entities list.`)) {
         return;
     }
     
@@ -2708,7 +2712,7 @@ function showMoveToGroupModal(currentGroupName, entityId) {
     modal.dataset.isMove = 'true';
     
     // Populate group select (excluding current group)
-    select.innerHTML = '<option value="">Select a group...</option>';
+    select.innerHTML = `<option value="">${csT("Select a group...")}</option>`;
     Object.keys(allGroups).forEach(groupName => {
         if (groupName === currentGroupName) {
             return; // Skip current group
@@ -2742,7 +2746,7 @@ function showMoveToGroupModal(currentGroupName, entityId) {
         
         const option = document.createElement('option');
         option.value = groupName;
-        option.textContent = displayName;
+        option.textContent = isSingleEntity ? `${displayName} (${groupData.entities[0]})` : displayName;
         select.appendChild(option);
     });
     
@@ -2766,7 +2770,7 @@ function showAddToGroupModal(entityId) {
     modal.dataset.entityId = entityId;
     
     // Populate group select
-    select.innerHTML = '<option value="">Select a group...</option>';
+    select.innerHTML = `<option value="">${csT("Select a group...")}</option>`;
     Object.keys(allGroups).forEach(groupName => {
         const groupData = allGroups[groupName];
         
@@ -2802,7 +2806,7 @@ function showAddToGroupModal(entityId) {
         
         const option = document.createElement('option');
         option.value = groupName;
-        option.textContent = displayName;
+        option.textContent = isSingleEntity ? `${displayName} (${groupData.entities[0]})` : displayName;
         select.appendChild(option);
     });
     
@@ -2835,8 +2839,8 @@ function showEditGroupModal(groupName) {
 }
 
 // Confirm delete group
-function confirmDeleteGroup(groupName) {
-    if (!confirm(`Delete group "${groupName}"? All entities will be moved back to the entity list.`)) return;
+async function confirmDeleteGroup(groupName) {
+    if (!await schedulerConfirm(`Delete group "${groupName}"? All entities will be moved back to the entity list.`)) return;
     
     deleteGroup(groupName);
 }
@@ -2853,7 +2857,7 @@ async function deleteGroup(groupName) {
         await renderEntityList();
     } catch (error) {
         console.error('Failed to delete group:', error);
-        alert('Failed to delete group');
+        await schedulerAlert(csT('Failed to delete group'));
     }
 }
 
@@ -2910,9 +2914,9 @@ function createTimelineEditor(config) {
         minValue = 5,
         maxValue = 30,
         snapValue = 0.5,
-        title = 'Schedule',
-        yAxisLabel = 'Temperature (°C)',
-        xAxisLabel = 'Time of Day (24hr)',
+        title = csT('Schedule'),
+        yAxisLabel = csT('Temperature (°C)'),
+        xAxisLabel = csT('Time of Day (24hr)'),
         showCurrentTime = true,
         tooltipMode = 'hover',
         showHeader = false,
@@ -2950,11 +2954,11 @@ function createTimelineEditor(config) {
     const modeDropdown = document.createElement('select');
     modeDropdown.id = `${idPrefix}-schedule-mode-dropdown`;
     modeDropdown.className = 'mode-dropdown';
-    modeDropdown.title = 'Schedule mode';
+    modeDropdown.title = csT('Schedule mode');
     modeDropdown.innerHTML = `
-        <option value="all_days">24hr</option>
-        <option value="5/2">Weekday</option>
-        <option value="individual">7 Day</option>
+        <option value="all_days">${csT("24hr")}</option>
+        <option value="5/2">${csT("Weekday")}</option>
+        <option value="individual">${csT("7 Day")}</option>
     `;
     if (showModeDropdown) {
         graphQuickActions.appendChild(modeDropdown);
@@ -2966,8 +2970,8 @@ function createTimelineEditor(config) {
         const btn = document.createElement('button');
         btn.id = `${idPrefix}-${btnConfig.id}`;
         btn.className = btnConfig.className || 'btn-quick-action';
-        btn.textContent = btnConfig.text;
-        btn.title = btnConfig.title || '';
+        btn.textContent = csT(btnConfig.text);
+        btn.title = csT(btnConfig.title || '');
         if (btnConfig.disabled) btn.disabled = true;
         if (btnConfig.onClick) btn.onclick = btnConfig.onClick;
         buttonElements[btnConfig.id] = btn;
@@ -3024,47 +3028,47 @@ function createScheduleEditor() {
                     </div>
                 </div>
                 <div class="graph-quick-actions">
-                    <select id="schedule-mode-dropdown" class="mode-dropdown" title="Schedule mode">
-                        <option value="all_days">24hr</option>
-                        <option value="5/2">Weekday</option>
-                        <option value="individual">7 Day</option>
+                    <select id="schedule-mode-dropdown" class="mode-dropdown" title="${csT("Schedule mode")}">
+                        <option value="all_days">${csT("24hr")}</option>
+                        <option value="5/2">${csT("Weekday")}</option>
+                        <option value="individual">${csT("7 Day")}</option>
                     </select>
-                    <button id="graph-copy-btn" class="btn-quick-action" title="Copy schedule">Copy</button>
-                    <button id="graph-paste-btn" class="btn-quick-action" title="Paste schedule">Paste</button>
-                    <button id="graph-undo-btn" class="btn-quick-action" title="Undo last change">Undo</button>
-                    <button id="advance-schedule-btn" class="btn-quick-action" title="Advance to next scheduled node">Advance</button>
-                    <button id="save-schedule-btn" class="btn-quick-action btn-primary" title="Save schedule">Save</button>
+                    <button id="graph-copy-btn" class="btn-quick-action" title="${csT("Copy schedule")}">${csT("Copy")}</button>
+                    <button id="graph-paste-btn" class="btn-quick-action" title="${csT("Paste schedule")}">${csT("Paste")}</button>
+                    <button id="graph-undo-btn" class="btn-quick-action" title="${csT("Undo last change")}">${csT("Undo")}</button>
+                    <button id="advance-schedule-btn" class="btn-quick-action" title="${csT("Advance to next scheduled node")}">${csT("Advance")}</button>
+                    <button id="save-schedule-btn" class="btn-quick-action btn-primary" title="${csT("Save schedule")}">${csT("Save")}</button>
                 </div>
             </div>
         </div>
 
         <div class="entity-status">
             <div class="status-item">
-                <span class="status-label">Current Temp:</span>
+                <span class="status-label">${csT("Current Temp:")}</span>
                 <span id="current-temp" class="status-value">--°C</span>
             </div>
             <div class="status-item">
-                <span class="status-label">Target Temp:</span>
+                <span class="status-label">${csT("Target Temp:")}</span>
                 <span id="target-temp" class="status-value">--°C</span>
             </div>
             <div class="status-item">
-                <span class="status-label">Scheduled Temp:</span>
+                <span class="status-label">${csT("Scheduled Temp:")}</span>
                 <span id="scheduled-temp" class="status-value">--°C</span>
             </div>
             <div class="status-item" id="current-hvac-mode-item" style="display: none;">
-                <span class="status-label">HVAC Mode:</span>
+                <span class="status-label">${csT("HVAC Mode:")}</span>
                 <span id="current-hvac-mode" class="status-value">--</span>
             </div>
             <div class="status-item" id="current-fan-mode-item" style="display: none;">
-                <span class="status-label">Fan Mode:</span>
+                <span class="status-label">${csT("Fan Mode:")}</span>
                 <span id="current-fan-mode" class="status-value">--</span>
             </div>
             <div class="status-item" id="current-swing-mode-item" style="display: none;">
-                <span class="status-label">Swing Mode:</span>
+                <span class="status-label">${csT("Swing Mode:")}</span>
                 <span id="current-swing-mode" class="status-value">--</span>
             </div>
             <div class="status-item" id="current-preset-mode-item" style="display: none;">
-                <span class="status-label">Preset Mode:</span>
+                <span class="status-label">${csT("Preset Mode:")}</span>
                 <span id="current-preset-mode" class="status-value">--</span>
             </div>
         </div>
@@ -3077,16 +3081,16 @@ function createScheduleEditor() {
         <div id="node-settings-panel" class="node-settings-panel" style="display: none;">
             <div class="settings-header">
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button id="prev-node" class="btn-nav-node" title="Previous node">◀</button>
+                    <button id="prev-node" class="btn-nav-node" title="${csT("Previous node")}">◀</button>
                     <div class="setting-item" style="margin: 0;">
                         <select id="node-time-input" class="mode-select" style="min-width: 100px;">
                         </select>
                     </div>
-                    <button id="next-node" class="btn-nav-node" title="Next node">▶</button>
+                    <button id="next-node" class="btn-nav-node" title="${csT("Next node")}">▶</button>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button id="test-fire-event-btn" class="btn-secondary-outline" title="Test fire event with current active node" style="padding: 4px 10px; font-size: 0.8rem;">Test Event</button>
-                    <button id="delete-node" class="btn-danger-outline" title="Delete selected node" style="padding: 4px 10px; font-size: 0.8rem;">Delete Node</button>
+                    <button id="test-fire-event-btn" class="btn-secondary-outline" title="${csT("Test fire event with current active node")}" style="padding: 4px 10px; font-size: 0.8rem;">${csT("Test Event")}</button>
+                    <button id="delete-node" class="btn-danger-outline" title="${csT("Delete selected node")}" style="padding: 4px 10px; font-size: 0.8rem;">${csT("Delete Node")}</button>
                     <button id="close-settings" class="btn-close-settings">✕</button>
                 </div>
             </div>
@@ -3137,7 +3141,7 @@ function collapseAllEditors() {
         // Reset add to group button text to "+"
         const addToGroupBtn = card.querySelector('.add-to-group-btn');
         if (addToGroupBtn) {
-            addToGroupBtn.textContent = '+';
+            addToGroupBtn.textContent = csT('+');
             addToGroupBtn.style.padding = '4px 8px';
         }
     });
@@ -3170,7 +3174,7 @@ function attachEditorEventListeners(editorElement) {
                 return;
             }
             
-            if (confirm(`Stop monitoring ${entityIdToUnmonitor}?\n\nUnmonitored entities will not be managed by the scheduler.`)) {
+            if (await schedulerConfirm(`Stop monitoring ${entityIdToUnmonitor}?\n\nUnmonitored entities will not be managed by the scheduler.`)) {
                 try {
                     await haAPI.setIgnored(entityIdToUnmonitor, true);
                     showToast(`${entityIdToUnmonitor} is now unmonitored`, 'success');
@@ -3221,12 +3225,12 @@ function attachEditorEventListeners(editorElement) {
                         }
                     }
                     if (anyActive) {
-                        advanceBtn.textContent = 'Cancel Advance';
-                        advanceBtn.title = 'Cancel advance override for all entities in group';
+                        advanceBtn.textContent = csT('Cancel Advance');
+                        advanceBtn.title = csT('Cancel advance override for all entities in group');
                         advanceBtn.dataset.isOverride = 'true';
                     } else {
-                        advanceBtn.textContent = 'Advance';
-                        advanceBtn.title = 'Advance all entities in group to next scheduled node';
+                        advanceBtn.textContent = csT('Advance');
+                        advanceBtn.title = csT('Advance all entities in group to next scheduled node');
                         advanceBtn.dataset.isOverride = 'false';
                     }
                 }
@@ -3250,11 +3254,11 @@ function attachEditorEventListeners(editorElement) {
                             for (const entityId of groupData.entities) {
                                 await haAPI.cancelAdvance(entityId);
                             }
-                            showToast('Advance canceled for all entities in group', 'success');
+                            showToast(csT('Advance canceled for all entities in group'), 'success');
 
                             // Optimistically update button state immediately
-                            advanceBtn.textContent = 'Advance';
-                            advanceBtn.title = 'Advance all entities in group to next scheduled node';
+                            advanceBtn.textContent = csT('Advance');
+                            advanceBtn.title = csT('Advance all entities in group to next scheduled node');
                             advanceBtn.dataset.isOverride = 'false';
                         }
                     }
@@ -3262,11 +3266,11 @@ function attachEditorEventListeners(editorElement) {
                     // Advance to next
                     if (currentGroup) {
                         await haAPI.advanceGroup(currentGroup);
-                        showToast(`Advanced all entities in group to next scheduled node`, 'success');
+                        showToast(csT(`Advanced all entities in group to next scheduled node`), 'success');
 
                         // Optimistically update button state immediately
-                        advanceBtn.textContent = 'Cancel Advance';
-                        advanceBtn.title = 'Cancel advance override for all entities in group';
+                        advanceBtn.textContent = csT('Cancel Advance');
+                        advanceBtn.title = csT('Cancel advance override for all entities in group');
                         advanceBtn.dataset.isOverride = 'true';
                     }
                 }
@@ -3314,7 +3318,7 @@ function attachEditorEventListeners(editorElement) {
                         if (groupData.entities.length > 0) {
                             await loadAdvanceHistory(groupData.entities[0]);
                         }
-                        showToast('Advance history cleared for all entities in group', 'success');
+                        showToast(csT('Advance history cleared for all entities in group'), 'success');
                     }
                 }
             } catch (error) {
@@ -3331,7 +3335,7 @@ function attachEditorEventListeners(editorElement) {
     if (clearBtn) {
         clearBtn.onclick = async () => {
             if (currentGroup) {
-                if (confirm(`Clear schedule for group "${currentGroup}"?`)) {
+                if (await schedulerConfirm(`Clear schedule for group "${currentGroup}"?`)) {
                     await clearScheduleForGroup(currentGroup);
                 }
             }
@@ -3352,7 +3356,7 @@ function attachEditorEventListeners(editorElement) {
             await saveSchedule();
             // Visual feedback
             const originalText = saveBtn.textContent;
-            saveBtn.textContent = 'Saved!';
+            saveBtn.textContent = csT('Saved!');
             setTimeout(() => {
                 saveBtn.textContent = originalText;
                 saveBtn.disabled = false;
@@ -3731,17 +3735,17 @@ function attachEditorEventListeners(editorElement) {
     // Delete node button
     const deleteNode = editorElement.querySelector('#delete-node');
     if (deleteNode) {
-        deleteNode.onclick = () => {
+        deleteNode.onclick = async () => {
             const state = getNodeSettingsState();
             if (state) {
                 const { panel, nodeIndex, timeline } = state;
 
                 if (timeline.keyframes.length <= 1) {
-                    alert('Cannot delete the last node. A schedule must have at least one node.');
+                    await schedulerAlert(csT('Cannot delete the last node. A schedule must have at least one node.'));
                     return;
                 }
 
-                if (!confirm('Delete this node?')) return;
+                if (!await schedulerConfirm(csT('Delete this node?'))) return;
 
                 saveNodeSettingsUndoState(timeline);
 
@@ -4000,7 +4004,7 @@ function copySchedule() {
         const copyBtn = getDocumentRoot().querySelector('#main-graph-copy-btn, #profile-graph-copy-btn, #default-graph-copy-btn, #copy-schedule-btn, #graph-copy-btn');
         if (copyBtn) {
             const originalText = copyBtn.textContent;
-            copyBtn.textContent = 'Copied!';
+            copyBtn.textContent = csT('Copied!');
             setTimeout(() => {
                 copyBtn.textContent = originalText;
             }, 1000);
@@ -4030,7 +4034,7 @@ async function pasteSchedule() {
     const pasteBtn = getDocumentRoot().querySelector('#main-graph-paste-btn, #profile-graph-paste-btn, #default-graph-paste-btn, #paste-schedule-btn, #graph-paste-btn');
     if (pasteBtn) {
         const originalText = pasteBtn.textContent;
-        pasteBtn.textContent = 'Pasted!';
+        pasteBtn.textContent = csT('Pasted!');
         setTimeout(() => {
             pasteBtn.textContent = originalText;
         }, 1000);
@@ -4057,10 +4061,10 @@ async function clearScheduleForEntity(entityId) {
         // Update current schedule reference
         currentSchedule = defaultSchedule;
         
-        showToast('Schedule cleared', 'success');
+        showToast(csT('Schedule cleared'), 'success');
     } catch (error) {
         console.error('Failed to clear schedule:', error);
-        showToast('Failed to clear schedule. Please try again.', 'error');
+        showToast(csT('Failed to clear schedule. Please try again.'), 'error');
     }
 }
 
@@ -4114,28 +4118,28 @@ async function clearScheduleForGroup(groupName) {
         showToast(`Cleared schedule for group "${groupName}"`, 'success');
     } catch (error) {
         console.error('Failed to clear group schedule:', error);
-        showToast('Failed to clear group schedule. Please try again.', 'error');
+        showToast(csT('Failed to clear group schedule. Please try again.'), 'error');
     }
 }
 
 // Get schedule title with mode
 function getScheduleTitle() {
     if (currentScheduleMode === 'all_days') {
-        return 'Schedule (All Days)';
+        return csT('Schedule (All Days)');
     } else if (currentScheduleMode === '5/2') {
-        const dayName = currentDay === 'weekday' ? 'Weekdays' : 'Weekend';
-        return `Schedule (${dayName})`;
+        const dayName = currentDay === 'weekday' ? csT('Weekdays') : csT('Weekend');
+        return `${csT("Schedule")} (${dayName})`;
     } else {
         const dayNames = {
-            'mon': 'Monday',
-            'tue': 'Tuesday', 
-            'wed': 'Wednesday',
-            'thu': 'Thursday',
-            'fri': 'Friday',
-            'sat': 'Saturday',
-            'sun': 'Sunday'
+            'mon': csT('Monday'),
+            'tue': csT('Tuesday'),
+            'wed': csT('Wednesday'),
+            'thu': csT('Thursday'),
+            'fri': csT('Friday'),
+            'sat': csT('Saturday'),
+            'sun': csT('Sunday')
         };
-        return `Schedule (${dayNames[currentDay] || currentDay})`;
+        return `${csT("Schedule")} (${dayNames[currentDay] || currentDay})`;
     }
 }
 
@@ -4179,19 +4183,19 @@ function updateGraphDaySelector() {
     // Create buttons based on mode
     if (currentScheduleMode === 'individual') {
         const days = [
-            { value: 'mon', label: 'Mon' },
-            { value: 'tue', label: 'Tue' },
-            { value: 'wed', label: 'Wed' },
-            { value: 'thu', label: 'Thu' },
-            { value: 'fri', label: 'Fri' },
-            { value: 'sat', label: 'Sat' },
-            { value: 'sun', label: 'Sun' }
+            { value: 'mon', label: csT('Mon') },
+            { value: 'tue', label: csT('Tue') },
+            { value: 'wed', label: csT('Wed') },
+            { value: 'thu', label: csT('Thu') },
+            { value: 'fri', label: csT('Fri') },
+            { value: 'sat', label: csT('Sat') },
+            { value: 'sun', label: csT('Sun') }
         ];
         
         days.forEach(day => {
             const btn = document.createElement('button');
             btn.className = 'day-period-btn';
-            btn.textContent = day.label;
+            btn.textContent = csT(day.label);
             btn.dataset.day = day.value;
             if (currentDay === day.value) {
                 btn.classList.add('active');
@@ -4203,14 +4207,14 @@ function updateGraphDaySelector() {
         });
     } else if (currentScheduleMode === '5/2') {
         const periods = [
-            { value: 'weekday', label: 'Weekday' },
-            { value: 'weekend', label: 'Weekend' }
+            { value: 'weekday', label: csT('Weekday') },
+            { value: 'weekend', label: csT('Weekend') }
         ];
         
         periods.forEach(period => {
             const btn = document.createElement('button');
             btn.className = 'day-period-btn';
-            btn.textContent = period.label;
+            btn.textContent = csT(period.label);
             btn.dataset.day = period.value;
             if (currentDay === period.value) {
                 btn.classList.add('active');
@@ -4247,7 +4251,7 @@ function updateGraphProfileDropdown() {
     if (profileDropdown.id === 'profile-dropdown') {
         const placeholderOption = document.createElement('option');
         placeholderOption.value = '';
-        placeholderOption.textContent = 'Choose Profile to Edit';
+        placeholderOption.textContent = csT('Choose Profile to Edit');
         placeholderOption.disabled = true;
         placeholderOption.selected = true;
         profileDropdown.appendChild(placeholderOption);
@@ -4673,111 +4677,63 @@ async function loadGroupHistoryData(entityIds) {
 
 // Save schedule (auto-save, no alerts)
 async function saveSchedule() {
-    // Don't save if we're in the middle of loading a schedule
-    if (isLoadingSchedule) {
-        pendingSaveNeeded = true;
-        return;
-    }
-    
-    // If a save is already in progress, mark pending and return
-    if (isSaveInProgress) {
-        console.warn('[SAVE] Save in progress, marking pending save needed.');
-        pendingSaveNeeded = true;
-        return;
-    }
-    
-    // Clear any existing debounce timeout
-    if (saveTimeout) {
-        clearTimeout(saveTimeout);
-        saveTimeout = null;
-    }
-    
-    // Debounce: wait for changes to settle before saving
+    if (!currentGroup) return;
+    // Capture the complete destination and data at edit time, before any await
+    // or debounce can switch the visible group, day, or selected profile.
+    const group = allGroups[currentGroup];
+    const profile = editingProfile || group?.active_profile;
+    const snapshot = {
+        groupName: currentGroup,
+        profile,
+        day: currentDay,
+        mode: currentScheduleMode,
+        nodes: JSON.parse(JSON.stringify(getGraphNodes())),
+        enabled: getDocumentRoot().querySelector('#schedule-enabled')?.checked ?? (group?.enabled !== false)
+    };
+    const key = JSON.stringify([snapshot.groupName, snapshot.profile, snapshot.day]);
+    pendingScheduleSaves.set(key, snapshot);
+    pendingSaveNeeded = true;
+    if (saveTimeout) clearTimeout(saveTimeout);
     saveTimeout = setTimeout(() => {
         saveTimeout = null;
-        performSave();
+        flushPendingSaveIfNeeded();
     }, SAVE_DEBOUNCE_MS);
 }
 
-// Perform the actual save operation (called after debounce delay)
 async function performSave() {
-    const saveStartTime = performance.now();
-    
-    // Set save in progress flag
+    if (isSaveInProgress || isLoadingSchedule) return;
     isSaveInProgress = true;
-    
-    // Check if we're editing a group schedule
-    if (currentGroup) {
-        try {
-            const nodes = getGraphNodes();
-            const enabledToggle = getDocumentRoot().querySelector('#schedule-enabled');
-            const enabled = enabledToggle
-                ? enabledToggle.checked
-                : (allGroups[currentGroup]?.enabled !== false);
-            
-            // Check if we're editing a non-active profile
-            const groupData = allGroups[currentGroup];
-            const activeProfile = groupData ? groupData.active_profile : null;
-            const targetProfile = editingProfile && editingProfile !== activeProfile ? editingProfile : null;
-            
-            // Save to group schedule with day and mode
-            const setGroupScheduleStart = performance.now();
-            await haAPI.setGroupSchedule(currentGroup, nodes, currentDay, currentScheduleMode, targetProfile || undefined);
-            
-            // Update local cache immediately with the saved data
-            if (allGroups[currentGroup]) {
-                if (!allGroups[currentGroup].schedules) {
-                    allGroups[currentGroup].schedules = {};
-                }
-                allGroups[currentGroup].schedules[currentDay] = JSON.parse(JSON.stringify(nodes));
-            }
-            
-            // Update enabled state (do not fail schedule save if this secondary call fails)
+    try {
+        while (pendingScheduleSaves.size) {
+            const [key, snapshot] = pendingScheduleSaves.entries().next().value;
+            pendingScheduleSaves.delete(key);
+            const { groupName, profile, day, mode, nodes, enabled } = snapshot;
             try {
-                if (enabled) {
-                    await haAPI.enableGroup(currentGroup);
-                } else {
-                    await haAPI.disableGroup(currentGroup);
+                await haAPI.setGroupSchedule(groupName, nodes, day, mode, profile);
+                const group = allGroups[groupName];
+                // A non-active profile edit must never replace the active cache.
+                if (group && (!profile || group.active_profile === profile)) {
+                    group.schedules ||= {};
+                    group.schedules[day] = JSON.parse(JSON.stringify(nodes));
+                    group.schedule_mode = mode;
                 }
-            } catch (enableError) {
-                console.error('[SAVE] Schedule saved but failed to update enabled state:', {
-                    error: enableError,
-                    groupName: currentGroup,
-                    enabled
-                });
-                showToast('Schedule saved, but failed to update enabled state.', 'warning');
-            }
-            
-            // Update local state
-            if (allGroups[currentGroup]) {
-                allGroups[currentGroup].enabled = enabled;
-            }
-        } catch (error) {
-            console.error('[SAVE] Failed to auto-save group schedule:', {
-                error,
-                errorCode: error?.code,
-                errorMessage: error?.message,
-                translationKey: error?.translation_key,
-                groupName: currentGroup,
-                timeSinceSaveStart: (performance.now() - saveStartTime).toFixed(2) + 'ms'
-            });
-            showToast('Failed to save schedule. Check browser console for details.', 'error');
-        } finally {
-            isSaveInProgress = false;
-            
-            // If another save was requested while this one was in progress, trigger it now
-            if (pendingSaveNeeded) {
-                pendingSaveNeeded = false;
-                // Call saveSchedule (not performSave) to go through debouncing again
-                saveSchedule();
+                try {
+                    if (enabled) await haAPI.enableGroup(groupName);
+                    else await haAPI.disableGroup(groupName);
+                    if (group) group.enabled = enabled;
+                } catch (error) {
+                    console.error('[SAVE] Failed to update enabled state:', error);
+                    showToast(csT('Schedule saved, but failed to update enabled state.'), 'warning');
+                }
+            } catch (error) {
+                console.error('[SAVE] Failed to save schedule:', groupName, error);
+                showToast(csT('Failed to save schedule. Check browser console for details.'), 'error');
             }
         }
-        return;
+    } finally {
+        isSaveInProgress = false;
+        pendingSaveNeeded = pendingScheduleSaves.size > 0;
     }
-    
-    // Note: Entity-only save path removed - all schedules (including single entities)
-    // are now saved as groups via set_group_schedule above.
-    isSaveInProgress = false;
 }
 
 // Handle graph changes - auto-save and sync if needed
@@ -4994,14 +4950,8 @@ function handleKeyframeTimelineChange(event) {
     const nodes = keyframesToScheduleNodes(keyframes);
     currentSchedule = nodes;
     
-    // Trigger auto-save with debouncing
-    if (saveTimeout) {
-        clearTimeout(saveTimeout);
-    }
-    
-    saveTimeout = setTimeout(() => {
-        saveSchedule();
-    }, SAVE_DEBOUNCE_MS);
+    // Capture the target immediately; saveSchedule handles debouncing.
+    saveSchedule();
 }
 
 // Update scheduled temperature display
@@ -5017,9 +4967,9 @@ function updateScheduledTemp() {
     
     if (nodes.length > 0) {
         const temp = interpolateTemperature(nodes, currentTime);
-        scheduledTempEl.textContent = (Number.isFinite(temp)) ? `${temp.toFixed(1)}${temperatureUnit}` : 'No Change';
+        scheduledTempEl.textContent = (Number.isFinite(temp)) ? `${temp.toFixed(1)}${temperatureUnit}` : csT('No Change');
     } else {
-        scheduledTempEl.textContent = '--';
+        scheduledTempEl.textContent = csT('--');
     }
 }
 
@@ -5048,7 +4998,7 @@ function updateEntityStatus(entity) {
         // HVAC mode is in entity.state for climate entities, not attributes
         const hvacMode = entity.state || entity.attributes.hvac_mode;
         if (hvacMode && hvacMode !== 'unknown' && hvacMode !== 'unavailable') {
-            hvacModeEl.textContent = hvacMode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            hvacModeEl.textContent = csT(hvacMode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
             hvacModeItem.style.display = '';
         } else {
             hvacModeItem.style.display = 'none';
@@ -5060,7 +5010,7 @@ function updateEntityStatus(entity) {
     const fanModeItem = getDocumentRoot().querySelector('#current-fan-mode-item');
     if (fanModeEl && fanModeItem) {
         if (entity.attributes.fan_mode) {
-            fanModeEl.textContent = entity.attributes.fan_mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            fanModeEl.textContent = csT(entity.attributes.fan_mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
             fanModeItem.style.display = '';
         } else {
             fanModeItem.style.display = 'none';
@@ -5072,7 +5022,7 @@ function updateEntityStatus(entity) {
     const swingModeItem = getDocumentRoot().querySelector('#current-swing-mode-item');
     if (swingModeEl && swingModeItem) {
         if (entity.attributes.swing_mode) {
-            swingModeEl.textContent = entity.attributes.swing_mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            swingModeEl.textContent = csT(entity.attributes.swing_mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
             swingModeItem.style.display = '';
         } else {
             swingModeItem.style.display = 'none';
@@ -5084,7 +5034,7 @@ function updateEntityStatus(entity) {
     const presetModeItem = getDocumentRoot().querySelector('#current-preset-mode-item');
     if (presetModeEl && presetModeItem) {
         if (entity.attributes.preset_mode) {
-            presetModeEl.textContent = entity.attributes.preset_mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            presetModeEl.textContent = csT(entity.attributes.preset_mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
             presetModeItem.style.display = '';
         } else {
             presetModeItem.style.display = 'none';
@@ -5170,9 +5120,9 @@ function updateGroupMemberRow(entityId, entityState) {
         
         if (nodes.length > 0) {
             const scheduledTemp = interpolateTemperature(nodes, currentTime);
-            scheduledCell.textContent = (Number.isFinite(scheduledTemp)) ? `${scheduledTemp.toFixed(1)}${temperatureUnit}` : 'No Change';
+            scheduledCell.textContent = (Number.isFinite(scheduledTemp)) ? `${scheduledTemp.toFixed(1)}${temperatureUnit}` : csT('No Change');
         } else {
-            scheduledCell.textContent = '--';
+            scheduledCell.textContent = csT('--');
         }
     }
 }
@@ -5193,9 +5143,9 @@ function updateAllGroupMemberScheduledTemps() {
         if (scheduledCell) {
             if (nodes.length > 0) {
                 const scheduledTemp = interpolateTemperature(nodes, currentTime);
-                scheduledCell.textContent = (Number.isFinite(scheduledTemp)) ? `${scheduledTemp.toFixed(1)}${temperatureUnit}` : 'No Change';
+                scheduledCell.textContent = (Number.isFinite(scheduledTemp)) ? `${scheduledTemp.toFixed(1)}${temperatureUnit}` : csT('No Change');
             } else {
-                scheduledCell.textContent = '--';
+                scheduledCell.textContent = csT('--');
             }
         }
     });
@@ -5336,7 +5286,7 @@ function setupEventListeners() {
             if (dropdownMenu) dropdownMenu.style.display = 'none';
             try {
                 await haAPI.callService('climate_scheduler', 'reload_integration', {});
-                showToast('Integration reloaded successfully', 'success');
+                showToast(csT('Integration reloaded successfully'), 'success');
             } catch (error) {
                 console.error('Failed to reload integration:', error);
                 showToast('Failed to reload integration: ' + error.message, 'error');
@@ -5437,12 +5387,12 @@ function setupEventListeners() {
         createGroupConfirm.addEventListener('click', async () => {
             const groupName = getDocumentRoot().querySelector('#new-group-name').value.trim();
             if (!groupName) {
-                alert('Please enter a group name');
+                await schedulerAlert(csT('Please enter a group name'));
                 return;
             }
             
             if (allGroups[groupName]) {
-                alert('A group with this name already exists');
+                await schedulerAlert(csT('A group with this name already exists'));
                 return;
             }
             
@@ -5457,7 +5407,7 @@ function setupEventListeners() {
                 await loadGroups();
             } catch (error) {
                 console.error('Failed to create group:', error);
-                alert('Failed to create group');
+                await schedulerAlert(csT('Failed to create group'));
             }
         });
     }
@@ -5493,7 +5443,7 @@ function setupEventListeners() {
             // Check if user wants to create a new group
             if (newGroupName) {
                 if (allGroups[newGroupName]) {
-                    alert('A group with this name already exists. Please select it from the dropdown or use a different name.');
+                    await schedulerAlert(csT('A group with this name already exists. Please select it from the dropdown or use a different name.'));
                     return;
                 }
                 groupName = newGroupName;
@@ -5503,13 +5453,13 @@ function setupEventListeners() {
                     await haAPI.createGroup(groupName);
                 } catch (error) {
                     console.error('Failed to create group:', error);
-                    alert('Failed to create group');
+                    await schedulerAlert(csT('Failed to create group'));
                     return;
                 }
             }
             
             if (!groupName) {
-                alert('Please select or create a group');
+                await schedulerAlert(csT('Please select or create a group'));
                 return;
             }
             
@@ -5552,7 +5502,7 @@ function setupEventListeners() {
                 }
             } catch (error) {
                 console.error('Failed to add entity to group:', error);
-                alert('Failed to add entity to group');
+                await schedulerAlert(csT('Failed to add entity to group'));
             }
         });
     }
@@ -5652,12 +5602,12 @@ function setupEventListeners() {
             }
             
             if (!fromUnit) {
-                showToast('Please select the current temperature unit (FROM)', 'warning');
+                showToast(csT('Please select the current temperature unit (FROM)'), 'warning');
                 return;
             }
             
             if (!targetUnit) {
-                showToast('Please select the target temperature unit (TO)', 'warning');
+                showToast(csT('Please select the target temperature unit (TO)'), 'warning');
                 return;
             }
             
@@ -5670,7 +5620,7 @@ function setupEventListeners() {
                 // Show loading indicator
                 if (convertTempConfirm) {
                     convertTempConfirm.disabled = true;
-                    convertTempConfirm.textContent = 'Converting...';
+                    convertTempConfirm.textContent = csT('Converting...');
                 }
                 
                 // Get current settings
@@ -5717,7 +5667,7 @@ function setupEventListeners() {
                 // Restore button state
                 if (convertTempConfirm) {
                     convertTempConfirm.disabled = false;
-                    convertTempConfirm.textContent = 'Convert Schedules';
+                    convertTempConfirm.textContent = csT('Convert Schedules');
                 }
             }
         });
@@ -5792,7 +5742,7 @@ function setupEventListeners() {
                 return;
             }
             
-            if (confirm(`Delete group "${groupName}"? All entities will be moved back to the entity list.`)) {
+            if (await schedulerConfirm(`Delete group "${groupName}"? All entities will be moved back to the entity list.`)) {
                 try {
                     await haAPI.deleteGroup(groupName);
                     showToast(`Deleted group: ${groupName}`, 'success');
@@ -6133,7 +6083,7 @@ async function handleNodeSettings(event) {
                 
                 if (isAlreadyUsed) {
                     option.disabled = true;
-                    option.textContent = `${timeStr} (in use)`;
+                    option.textContent = csT(`${timeStr} (in use)`);
                 }
                 
                 if (timeStr === node.time) {
@@ -6151,9 +6101,9 @@ async function handleNodeSettings(event) {
         
         if (isAlreadyUsed) {
             lastOption.disabled = true;
-            lastOption.textContent = '23:59 (in use)';
+            lastOption.textContent = csT('23:59 (in use)');
         } else {
-            lastOption.textContent = '23:59';
+            lastOption.textContent = csT('23:59');
         }
         
         if (node.time === '23:59') {
@@ -6176,21 +6126,21 @@ async function syncAllTemperatures() {
     try {
         const button = getDocumentRoot().querySelector('#sync-all-menu');
         button.disabled = true;
-        button.textContent = '⟲ Syncing...';
+        button.textContent = csT('⟲ Syncing...');
         
         await haAPI.callService('climate_scheduler', 'sync_all', {});
         
-        button.textContent = '✓ Synced!';
+        button.textContent = csT('✓ Synced!');
         setTimeout(() => {
-            button.textContent = '⟲ Sync All Thermostats';
+            button.textContent = csT('⟲ Sync All Thermostats');
             button.disabled = false;
         }, 2000);
     } catch (error) {
         console.error('Failed to sync temperatures:', error);
-        alert('Failed to sync temperatures: ' + error.message);
+        await schedulerAlert('Failed to sync temperatures: ' + error.message);
         const button = getDocumentRoot().querySelector('#sync-all-menu');
         if (button) {
-            button.textContent = '⟲ Sync All Thermostats';
+            button.textContent = csT('⟲ Sync All Thermostats');
             button.disabled = false;
         }
     }
@@ -6258,19 +6208,19 @@ async function initializeDefaultScheduleGraph() {
         const editorInstance = createTimelineEditor({
             idPrefix: 'default',
             buttons: [
-                { id: 'graph-prev-btn', text: '◀', title: 'Previous keyframe' },
-                { id: 'graph-next-btn', text: '▶', title: 'Next keyframe' },
-                { id: 'graph-copy-btn', text: 'Copy', title: 'Copy schedule' },
-                { id: 'graph-paste-btn', text: 'Paste', title: 'Paste schedule', disabled: true },
-                { id: 'graph-undo-btn', text: 'Undo', title: 'Undo last change' },
-                { id: 'graph-clear-btn', text: 'Clear', title: 'Clear all nodes' }
+                { id: 'graph-prev-btn', text: '◀', title: csT('Previous keyframe') },
+                { id: 'graph-next-btn', text: '▶', title: csT('Next keyframe') },
+                { id: 'graph-copy-btn', text: csT('Copy'), title: csT('Copy schedule') },
+                { id: 'graph-paste-btn', text: csT('Paste'), title: csT('Paste schedule'), disabled: true },
+                { id: 'graph-undo-btn', text: csT('Undo'), title: csT('Undo last change') },
+                { id: 'graph-clear-btn', text: csT('Clear'), title: csT('Clear all nodes') }
             ],
             minValue: minTempSetting !== null ? minTempSetting : (temperatureUnit === '°F' ? 41 : 5),
             maxValue: maxTempSetting !== null ? maxTempSetting : (temperatureUnit === '°F' ? 86 : 30),
             snapValue: graphSnapStep,
             title: '',
             yAxisLabel: `Temperature (${temperatureUnit})`,
-            xAxisLabel: `Time of Day (24hr)`,
+            xAxisLabel: csT(`Time of Day (24hr)`),
             showCurrentTime: false,
             tooltipMode: tooltipMode,
             showHeader: false,
@@ -6438,7 +6388,7 @@ async function checkWorkdayIntegration(settings) {
         if (hasWorkday) {
             // Workday is available - enable the checkbox
             checkbox.disabled = false;
-            helpText.textContent = 'When enabled, uses the Workday integration for accurate 5/2 scheduling (respects holidays and custom workdays). When disabled, uses the selected workdays below.';
+            helpText.textContent = csT('When enabled, uses the Workday integration for accurate 5/2 scheduling (respects holidays and custom workdays). When disabled, uses the selected workdays below.');
             if (label) label.style.cursor = 'pointer';
             
             // Load saved setting
@@ -6452,7 +6402,7 @@ async function checkWorkdayIntegration(settings) {
             // Workday not available - disable and show message
             checkbox.disabled = true;
             checkbox.checked = false;
-            helpText.innerHTML = 'Workday integration not detected. Configure workdays manually below. <a href="https://www.home-assistant.io/integrations/workday/" target="_blank" style="color: var(--primary);">Install Workday integration</a>';
+            helpText.innerHTML = `${csT("Workday integration not detected. Configure workdays manually below.")} <a href="https://www.home-assistant.io/integrations/workday/" target="_blank" style="color: var(--primary);">${csT("Install Workday integration")}</a>`;
             if (label) {
                 label.style.cursor = 'not-allowed';
                 label.style.opacity = '0.6';
@@ -6467,7 +6417,7 @@ async function checkWorkdayIntegration(settings) {
         
     } catch (error) {
         console.error('Failed to check Workday integration:', error);
-        helpText.textContent = 'Could not determine if Workday integration is installed.';
+        helpText.textContent = csT('Could not determine if Workday integration is installed.');
     }
 }
 
@@ -6904,7 +6854,7 @@ async function setupSettingsPanel() {
             if (e.target.value !== '') {
                 const v = parseFloat(e.target.value);
                 if (Number.isNaN(v)) {
-                    alert('Minimum temperature must be a number');
+                    await schedulerAlert(csT('Minimum temperature must be a number'));
                     return;
                 }
             }
@@ -6916,7 +6866,7 @@ async function setupSettingsPanel() {
             if (e.target.value !== '') {
                 const v = parseFloat(e.target.value);
                 if (Number.isNaN(v)) {
-                    alert('Maximum temperature must be a number');
+                    await schedulerAlert(csT('Maximum temperature must be a number'));
                     return;
                 }
             }
@@ -6928,7 +6878,7 @@ async function setupSettingsPanel() {
     const resetBtn = getDocumentRoot().querySelector('#reset-defaults');
     if (resetBtn) {
         resetBtn.addEventListener('click', async () => {
-            if (confirm('Reset to default schedule settings?')) {
+            if (await schedulerConfirm(csT('Reset to default schedule settings?'))) {
                 defaultScheduleSettings = [];
                 
                 if (defaultScheduleGraph) {
@@ -6937,9 +6887,9 @@ async function setupSettingsPanel() {
                 
                 const success = await saveSettings();
                 if (success) {
-                    resetBtn.textContent = '✓ Reset!';
+                    resetBtn.textContent = csT('✓ Reset!');
                     setTimeout(() => {
-                        resetBtn.textContent = 'Reset to Defaults';
+                        resetBtn.textContent = csT('Reset to Defaults');
                     }, 2000);
                 }
             }
@@ -6968,7 +6918,7 @@ async function setupSettingsPanel() {
     const clearDefaultScheduleBtn = getDocumentRoot().querySelector('#clear-default-schedule-btn');
     if (clearDefaultScheduleBtn) {
         clearDefaultScheduleBtn.addEventListener('click', async () => {
-            if (confirm('Clear the default schedule? All nodes will be removed.')) {
+            if (await schedulerConfirm(csT('Clear the default schedule? All nodes will be removed.'))) {
                 defaultScheduleSettings = [];
                 
                 if (defaultScheduleGraph) {
@@ -6977,9 +6927,9 @@ async function setupSettingsPanel() {
                 
                 const success = await saveSettings();
                 if (success) {
-                    clearDefaultScheduleBtn.textContent = '✓ Cleared!';
+                    clearDefaultScheduleBtn.textContent = csT('✓ Cleared!');
                     setTimeout(() => {
-                        clearDefaultScheduleBtn.textContent = 'Clear Schedule';
+                        clearDefaultScheduleBtn.textContent = csT('Clear Schedule');
                     }, 2000);
                 }
             }
@@ -7000,7 +6950,7 @@ async function setupSettingsPanel() {
     if (runDiagnosticsBtn) {
         runDiagnosticsBtn.addEventListener('click', async () => {
             try {
-                runDiagnosticsBtn.textContent = '🔍 Running diagnostics...';
+                runDiagnosticsBtn.textContent = csT('🔍 Running diagnostics...');
                 runDiagnosticsBtn.disabled = true;
                 
                 const result = await haAPI.runDiagnostics();
@@ -7026,15 +6976,15 @@ async function setupSettingsPanel() {
                 
                 showToast(`Diagnostics saved to ${filename}`, 'success', 4000);
                 
-                runDiagnosticsBtn.textContent = '✓ Diagnostics Complete!';
+                runDiagnosticsBtn.textContent = csT('✓ Diagnostics Complete!');
                 setTimeout(() => {
-                    runDiagnosticsBtn.textContent = 'Run Diagnostics';
+                    runDiagnosticsBtn.textContent = csT('Run Diagnostics');
                     runDiagnosticsBtn.disabled = false;
                 }, 3000);
             } catch (error) {
                 console.error('Failed to run diagnostics:', error);
                 showToast('Failed to run diagnostics: ' + error.message, 'error');
-                runDiagnosticsBtn.textContent = 'Run Diagnostics';
+                runDiagnosticsBtn.textContent = csT('Run Diagnostics');
                 runDiagnosticsBtn.disabled = false;
             }
         });
@@ -7051,23 +7001,23 @@ async function setupSettingsPanel() {
                 let confirmDeleteAll = false;
                 if (!autoCreationEnabled) {
                     // Ask for confirmation to delete all
-                    const confirmed = confirm(
-                        'Auto-creation of derivative sensors is disabled.\\n\\n' +
-                        'This will DELETE ALL climate_scheduler derivative sensors.\\n\\n' +
+                    const confirmed = await schedulerConfirm(
+                        'Auto-creation of derivative sensors is disabled.\n\n' +
+                        'This will DELETE ALL climate_scheduler derivative sensors.\n\n' +
                         'Are you sure you want to continue?'
                     );
                     if (!confirmed) return;
                     confirmDeleteAll = true;
                 } else {
                     // Just cleanup orphaned sensors
-                    const confirmed = confirm(
-                        'This will remove derivative sensors for thermostats that no longer exist.\\n\\n' +
+                    const confirmed = await schedulerConfirm(
+                        'This will remove derivative sensors for thermostats that no longer exist.\n\n' +
                         'Continue?'
                     );
                     if (!confirmed) return;
                 }
                 
-                cleanupBtn.textContent = '🧹 Cleaning up...';
+                cleanupBtn.textContent = csT('🧹 Cleaning up...');
                 cleanupBtn.disabled = true;
                 
                 const result = await haAPI.cleanupDerivativeSensors(confirmDeleteAll);
@@ -7083,15 +7033,15 @@ async function setupSettingsPanel() {
                     showToast(`Deleted ${result.deleted_count} sensors with ${result.errors.length} errors`, 'warning', 5000);
                 }
                 
-                cleanupBtn.textContent = '✓ Cleanup Complete!';
+                cleanupBtn.textContent = csT('✓ Cleanup Complete!');
                 setTimeout(() => {
-                    cleanupBtn.textContent = '🧹 Cleanup Derivative Sensors';
+                    cleanupBtn.textContent = csT('🧹 Cleanup Derivative Sensors');
                     cleanupBtn.disabled = false;
                 }, 3000);
             } catch (error) {
                 console.error('Failed to cleanup derivative sensors:', error);
-                showToast('Failed to cleanup derivative sensors', 'error');
-                cleanupBtn.textContent = '🧹 Cleanup Derivative Sensors';
+                showToast(csT('Failed to cleanup derivative sensors'), 'error');
+                cleanupBtn.textContent = csT('🧹 Cleanup Derivative Sensors');
                 cleanupBtn.disabled = false;
             }
         });
@@ -7102,21 +7052,21 @@ async function setupSettingsPanel() {
         cleanupClimateBtn.addEventListener('click', async () => {
             try {
                 // First do a dry run to see what would be deleted
-                cleanupClimateBtn.textContent = '🔍 Scanning...';
+                cleanupClimateBtn.textContent = csT('🔍 Scanning...');
                 cleanupClimateBtn.disabled = true;
                 
                 const dryRunResult = await haAPI.cleanupOrphanedClimateEntities(false);
                 
                 if (!dryRunResult.orphaned_entities || dryRunResult.orphaned_entities.length === 0) {
-                    showToast('No orphaned entities found', 'success');
-                    cleanupClimateBtn.textContent = 'Cleanup Orphaned Entities';
+                    showToast(csT('No orphaned entities found'), 'success');
+                    cleanupClimateBtn.textContent = csT('Cleanup Orphaned Entities');
                     cleanupClimateBtn.disabled = false;
                     return;
                 }
                 
                 // Ask for confirmation with list of entities
                 const entityList = dryRunResult.orphaned_entities.join('\n• ');
-                const confirmed = confirm(
+                const confirmed = await schedulerConfirm(
                     `Found ${dryRunResult.orphaned_entities.length} orphaned entities:\n\n` +
                     `• ${entityList}\n\n` +
                     'These entities no longer have matching groups or climate entities in storage.\n\n' +
@@ -7124,30 +7074,30 @@ async function setupSettingsPanel() {
                 );
                 
                 if (!confirmed) {
-                    cleanupClimateBtn.textContent = 'Cleanup Orphaned Entities';
+                    cleanupClimateBtn.textContent = csT('Cleanup Orphaned Entities');
                     cleanupClimateBtn.disabled = false;
                     return;
                 }
                 
-                cleanupClimateBtn.textContent = '🗑️ Deleting...';
+                cleanupClimateBtn.textContent = csT('🗑️ Deleting...');
                 
                 const deleteResult = await haAPI.cleanupOrphanedClimateEntities(true);
                 
                 if (deleteResult.removed && deleteResult.removed.length > 0) {
                     showToast(`Removed ${deleteResult.removed.length} orphaned entities`, 'success', 4000);
                 } else {
-                    showToast('No entities were removed', 'warning');
+                    showToast(csT('No entities were removed'), 'warning');
                 }
                 
-                cleanupClimateBtn.textContent = '✓ Cleanup Complete!';
+                cleanupClimateBtn.textContent = csT('✓ Cleanup Complete!');
                 setTimeout(() => {
-                    cleanupClimateBtn.textContent = 'Cleanup Orphaned Entities';
+                    cleanupClimateBtn.textContent = csT('Cleanup Orphaned Entities');
                     cleanupClimateBtn.disabled = false;
                 }, 3000);
             } catch (error) {
                 console.error('Failed to cleanup orphaned entities:', error);
-                showToast('Failed to cleanup orphaned entities', 'error');
-                cleanupClimateBtn.textContent = 'Cleanup Orphaned Entities';
+                showToast(csT('Failed to cleanup orphaned entities'), 'error');
+                cleanupClimateBtn.textContent = csT('Cleanup Orphaned Entities');
                 cleanupClimateBtn.disabled = false;
             }
         });
@@ -7157,7 +7107,7 @@ async function setupSettingsPanel() {
     if (cleanupStorageBtn) {
         cleanupStorageBtn.addEventListener('click', async () => {
             try {
-                cleanupStorageBtn.textContent = '🔍 Dry run...';
+                cleanupStorageBtn.textContent = csT('🔍 Dry run...');
                 cleanupStorageBtn.disabled = true;
 
                 const preview = await haAPI.cleanupUnmonitoredStorage(true);
@@ -7173,8 +7123,8 @@ async function setupSettingsPanel() {
                     wouldRemoveAdvanceHistory.length;
 
                 if (!preview?.would_change || totalPlanned === 0) {
-                    showToast('Dry run complete: no stale storage entries to remove.', 'success', 5000);
-                    cleanupStorageBtn.textContent = 'Cleanup Unmonitored Storage';
+                    showToast(csT('Dry run complete: no stale storage entries to remove.'), 'success', 5000);
+                    cleanupStorageBtn.textContent = csT('Cleanup Unmonitored Storage');
                     cleanupStorageBtn.disabled = false;
                     return;
                 }
@@ -7196,10 +7146,10 @@ async function setupSettingsPanel() {
                 }
 
                 const summaryParts = [];
-                if (wouldRemoveGroups.length > 0) summaryParts.push(`${wouldRemoveGroups.length} groups`);
-                if (wouldRemoveEntityRefs.length > 0) summaryParts.push(`${wouldRemoveEntityRefs.length} entity references`);
-                if (wouldRemoveProfiles.length > 0) summaryParts.push(`${wouldRemoveProfiles.length} profiles`);
-                if (wouldRemoveAdvanceHistory.length > 0) summaryParts.push(`${wouldRemoveAdvanceHistory.length} advance-history entries`);
+                if (wouldRemoveGroups.length > 0) summaryParts.push(csT(`${wouldRemoveGroups.length} groups`));
+                if (wouldRemoveEntityRefs.length > 0) summaryParts.push(csT(`${wouldRemoveEntityRefs.length} entity references`));
+                if (wouldRemoveProfiles.length > 0) summaryParts.push(csT(`${wouldRemoveProfiles.length} profiles`));
+                if (wouldRemoveAdvanceHistory.length > 0) summaryParts.push(csT(`${wouldRemoveAdvanceHistory.length} advance-history entries`));
 
                 const groupPreview = wouldRemoveGroups
                     .slice(0, 5)
@@ -7208,19 +7158,19 @@ async function setupSettingsPanel() {
                     .join(', ');
 
                 const confirmMessage =
-                    `Dry run found changes:\n\n` +
-                    `Will remove: ${summaryParts.join(', ')}.\n` +
-                    (groupPreview ? `\nGroups: ${groupPreview}${wouldRemoveGroups.length > 5 ? ', ...' : ''}\n` : '\n') +
-                    `\nProceed with cleanup?`;
+                    `${csT("Dry run found changes:")}\n\n` +
+                    `${csT(`Will remove: ${summaryParts.join(', ')}.`)}\n` +
+                    (groupPreview ? `\n${csT(`Groups: ${groupPreview}${wouldRemoveGroups.length > 5 ? ', ...' : ''}`)}\n` : '\n') +
+                    `\n${csT("Proceed with cleanup?")}`;
 
-                const confirmed = confirm(confirmMessage);
+                const confirmed = await schedulerConfirm(confirmMessage);
                 if (!confirmed) {
-                    cleanupStorageBtn.textContent = 'Cleanup Unmonitored Storage';
+                    cleanupStorageBtn.textContent = csT('Cleanup Unmonitored Storage');
                     cleanupStorageBtn.disabled = false;
                     return;
                 }
 
-                cleanupStorageBtn.textContent = '🧹 Cleaning storage...';
+                cleanupStorageBtn.textContent = csT('🧹 Cleaning storage...');
                 const result = await haAPI.cleanupUnmonitoredStorage(false);
 
                 if (cleanupAutoDownloadReports) {
@@ -7242,21 +7192,21 @@ async function setupSettingsPanel() {
                 if (result?.message) {
                     showToast(result.message, 'success', 5000);
                 } else {
-                    showToast('Storage cleanup complete', 'success');
+                    showToast(csT('Storage cleanup complete'), 'success');
                 }
 
                 await loadGroups();
                 await renderEntityList();
 
-                cleanupStorageBtn.textContent = '✓ Cleanup Complete!';
+                cleanupStorageBtn.textContent = csT('✓ Cleanup Complete!');
                 setTimeout(() => {
-                    cleanupStorageBtn.textContent = 'Cleanup Unmonitored Storage';
+                    cleanupStorageBtn.textContent = csT('Cleanup Unmonitored Storage');
                     cleanupStorageBtn.disabled = false;
                 }, 3000);
             } catch (error) {
                 console.error('Failed to cleanup storage:', error);
-                showToast('Failed to cleanup storage', 'error');
-                cleanupStorageBtn.textContent = 'Cleanup Unmonitored Storage';
+                showToast(csT('Failed to cleanup storage'), 'error');
+                cleanupStorageBtn.textContent = csT('Cleanup Unmonitored Storage');
                 cleanupStorageBtn.disabled = false;
             }
         });
@@ -7328,11 +7278,11 @@ function handleDefaultNodeSettings(event) {
     // Populate HVAC mode dropdown
     if (hvacModeSelect && hvacModeItem) {
         if (allHvacModes.length > 0) {
-            hvacModeSelect.innerHTML = '<option value="">-- No Change --</option>';
+            hvacModeSelect.innerHTML = `<option value="">${csT("-- No Change --")}</option>`;
             allHvacModes.forEach(mode => {
                 const option = document.createElement('option');
                 option.value = mode;
-                option.textContent = mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                option.textContent = csT(mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
                 if (node.hvac_mode === mode) option.selected = true;
                 hvacModeSelect.appendChild(option);
             });
@@ -7345,11 +7295,11 @@ function handleDefaultNodeSettings(event) {
     // Populate fan mode dropdown
     if (fanModeSelect && fanModeItem) {
         if (allFanModes.length > 0) {
-            fanModeSelect.innerHTML = '<option value="">-- No Change --</option>';
+            fanModeSelect.innerHTML = `<option value="">${csT("-- No Change --")}</option>`;
             allFanModes.forEach(mode => {
                 const option = document.createElement('option');
                 option.value = mode;
-                option.textContent = mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                option.textContent = csT(mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
                 if (node.fan_mode === mode) option.selected = true;
                 fanModeSelect.appendChild(option);
             });
@@ -7362,11 +7312,11 @@ function handleDefaultNodeSettings(event) {
     // Populate swing mode dropdown
     if (swingModeSelect && swingModeItem) {
         if (allSwingModes.length > 0) {
-            swingModeSelect.innerHTML = '<option value="">-- No Change --</option>';
+            swingModeSelect.innerHTML = `<option value="">${csT("-- No Change --")}</option>`;
             allSwingModes.forEach(mode => {
                 const option = document.createElement('option');
                 option.value = mode;
-                option.textContent = mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                option.textContent = csT(mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
                 if (node.swing_mode === mode) option.selected = true;
                 swingModeSelect.appendChild(option);
             });
@@ -7379,11 +7329,11 @@ function handleDefaultNodeSettings(event) {
     // Populate preset mode dropdown
     if (presetModeSelect && presetModeItem) {
         if (allPresetModes.length > 0) {
-            presetModeSelect.innerHTML = '<option value="">-- No Change --</option>';
+            presetModeSelect.innerHTML = `<option value="">${csT("-- No Change --")}</option>`;
             allPresetModes.forEach(mode => {
                 const option = document.createElement('option');
                 option.value = mode;
-                option.textContent = mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                option.textContent = csT(mode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
                 if (node.preset_mode === mode) option.selected = true;
                 presetModeSelect.appendChild(option);
             });
@@ -7485,13 +7435,13 @@ function handleDefaultNodeSettings(event) {
         const newDeleteBtn = deleteBtn.cloneNode(true);
         deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
         
-        newDeleteBtn.addEventListener('click', () => {
+        newDeleteBtn.addEventListener('click', async () => {
             if (defaultScheduleGraph.keyframes.length <= 1) {
-                alert('Cannot delete the last node. A schedule must have at least one node.');
+                await schedulerAlert(csT('Cannot delete the last node. A schedule must have at least one node.'));
                 return;
             }
             
-            if (confirm('Delete this node?')) {
+            if (await schedulerConfirm(csT('Delete this node?'))) {
                 // Remove keyframe at index
                 defaultScheduleGraph.keyframes = defaultScheduleGraph.keyframes.filter((_, i) => i !== nodeIndex);
                 defaultScheduleSettings = keyframesToScheduleNodes(defaultScheduleGraph.keyframes);

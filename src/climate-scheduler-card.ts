@@ -1,3 +1,4 @@
+import { t } from './localize';
 ﻿/**
  * Climate Scheduler Card 
  */
@@ -32,7 +33,7 @@ import { customElement, property, state } from 'lit/decorators.js';
             composed: true
           }) as any;
           event.detail = {
-            message: 'Climate Scheduler has been updated. Please refresh your browser (Ctrl+F5 or Cmd+Shift+R) to load the new version.',
+            message: t("Climate Scheduler has been updated. Please refresh your browser (Ctrl+F5 or Cmd+Shift+R) to load the new version."),
             duration: 0  // Persistent notification
           };
           document.body.dispatchEvent(event);
@@ -55,6 +56,10 @@ export class ClimateSchedulerCard extends LitElement {
   @state() private _hasIntegration = false;
   @state() private _errorMessage: TemplateResult | string | null = null;
   @state() private _panelLoaded = false;
+
+  private _t(message: string): string {
+    return t(message, this.hass?.locale?.language || this.hass?.language);
+  }
 
   static getConfigElement() { return null; }
   static getStubConfig() { return {}; }
@@ -99,8 +104,8 @@ export class ClimateSchedulerCard extends LitElement {
       if (!exists) {
         (window as any).customCards.push({
           type: cardType,
-          name: 'Climate Scheduler Card',
-          description: 'Full Climate Scheduler UI as a Lovelace card',
+          name: this._t("Climate Scheduler Card"),
+          description: this._t("Full Climate Scheduler UI as a Lovelace card"),
           preview: false,
         });
         console.info('[Climate Scheduler] Card registered in picker');
@@ -138,7 +143,7 @@ export class ClimateSchedulerCard extends LitElement {
     if (!this.hass) {
       return html`
         <div class="wrapper">
-          <div class="message warning">Waiting for Home Assistant connection...</div>
+          <div class="message warning">${this._t("Waiting for Home Assistant connection...")}</div>
         </div>
       `;
     }
@@ -147,9 +152,9 @@ export class ClimateSchedulerCard extends LitElement {
       return html`
         <div class="wrapper">
           <div class="message error">
-            <h3>❌ Climate Scheduler Integration Not Found</h3>
-            <p>This card requires the Climate Scheduler integration to be installed.</p>
-            <p>Install it from HACS or visit: 
+            <h3>${this._t("❌ Climate Scheduler Integration Not Found")}</h3>
+            <p>${this._t("This card requires the Climate Scheduler integration to be installed.")}</p>
+            <p>${this._t("Install it from HACS or visit:")}
               <a href="https://github.com/kneave/climate-scheduler" target="_blank">
                 github.com/kneave/climate-scheduler
               </a>
@@ -193,7 +198,7 @@ export class ClimateSchedulerCard extends LitElement {
       // Only accept the integration-hosted static path; do not fallback.
       const testResponse = await fetch(`${basePath}/.version`);
       if (!testResponse.ok) {
-        throw new Error('Integration frontend not found at /climate_scheduler/static');
+        throw new Error(this._t("Integration frontend not found at /climate_scheduler/static"));
       }
       
       const hacstag = new URL(scriptUrl).searchParams.get('hacstag');
@@ -232,8 +237,8 @@ export class ClimateSchedulerCard extends LitElement {
       this.requestUpdate();
     } catch (e: any) {
       this._errorMessage = html`
-        Failed to load panel module: ${e.message}<br>
-        Make sure the Climate Scheduler integration is installed and the frontend is available at /climate_scheduler/static
+        ${this._t("Failed to load panel module:")} ${e.message}<br>
+        ${this._t("Make sure the Climate Scheduler integration is installed and the frontend is available at /climate_scheduler/static")}
       `;
       this.requestUpdate();
     }

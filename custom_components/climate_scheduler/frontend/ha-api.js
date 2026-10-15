@@ -665,7 +665,17 @@ class HomeAssistantAPI {
             // Use hass connection for event subscription
             const conn = this.hass.connection;
             if (conn && conn.subscribeEvents) {
-                return await conn.subscribeEvents(callback, eventType);
+                try {
+                    return await conn.subscribeEvents(callback, eventType);
+                } catch (error) {
+                    // HA restricts arbitrary event subscriptions for non-admins.
+                    // This optional notification must not prevent panel startup.
+                    if (error?.code === 'unauthorized') {
+                        console.debug('Profile event subscription is not permitted for this user');
+                        return null;
+                    }
+                    throw error;
+                }
             }
         }
         console.warn('Event subscription not available');

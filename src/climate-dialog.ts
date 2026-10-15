@@ -1,3 +1,4 @@
+import { t } from './localize';
 import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
@@ -128,8 +129,40 @@ export class ClimateControlDialog extends LitElement {
 
     .dual-range-container {
       position: relative;
-      margin: 0 0;
+      margin: 14px 10px 8px;
       padding: 0;
+      height: 28px;
+    }
+
+    /* A shared rail stays visible in auto/off and behind both range thumbs. */
+    .dual-range-container::before {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 0;
+      right: 0;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--divider-color, #aebbc5);
+      pointer-events: none;
+    }
+
+    .dual-range-input:only-of-type:not(.heating):not(.cooling):not(.heat-cool)::-webkit-slider-runnable-track {
+      background: linear-gradient(to right, var(--primary-color, #03a9f4) var(--track-fill, 50%), transparent var(--track-fill, 50%));
+    }
+
+    .dual-range-input:only-of-type:not(.heating):not(.cooling):not(.heat-cool)::-moz-range-progress {
+      background: var(--primary-color, #03a9f4);
+      height: 8px;
+      border-radius: 999px;
+    }
+
+    .dual-range-input:disabled { opacity: 0.45; }
+    .dual-range-input:disabled::-webkit-slider-thumb { cursor: not-allowed; }
+    .dual-range-input:disabled::-moz-range-thumb { cursor: not-allowed; }
+    .dual-range-input:focus-visible { outline: none; }
+    .dual-range-input {
+      appearance: none;
     }
 
     .dual-range-input {
@@ -217,7 +250,7 @@ export class ClimateControlDialog extends LitElement {
 
     /* Heating input - red from left to thumb */
     .dual-range-input.heating::-webkit-slider-runnable-track {
-      background: linear-gradient(to right, 
+      background: linear-gradient(to right,
         #f44336 0%, 
         #f44336 var(--track-fill, 50%), 
         transparent var(--track-fill, 50%));
@@ -241,7 +274,7 @@ export class ClimateControlDialog extends LitElement {
 
     /* Cooling input - blue from right to thumb */
     .dual-range-input.cooling::-webkit-slider-runnable-track {
-      background: linear-gradient(to left, 
+      background: linear-gradient(to left,
         #2196f3 0%, 
         #2196f3 var(--track-fill, 50%), 
         transparent var(--track-fill, 50%));
@@ -374,6 +407,15 @@ export class ClimateControlDialog extends LitElement {
     input:checked + .toggle-slider:before {
       transform: translateX(22px);
     }
+
+    .mode-select { border-radius: 10px; min-height: 42px; }
+    .dialog-header { font-weight: 600; letter-spacing: -0.02em; }
+    .section-title { font-size: 11px; letter-spacing: 0.08em; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--primary-color, #03a9f4);
+      outline-offset: 3px;
+    }
+    @media (max-width: 480px) { .mode-row { flex-wrap: wrap; } .mode-row .section { min-width: 120px; } }
   `;
 
   // Helper to capitalize mode text
@@ -382,14 +424,14 @@ export class ClimateControlDialog extends LitElement {
     if (text === 'heat_cool') {
       return 'Heat/Cool';
     }
-    return text.split('_').map(word => 
+    return text.split('_').map(word =>
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   }
 
   render() {
     if (!this.stateObj) {
-      return html`<div>No climate entity data</div>`;
+      return html`<div>${t("No climate entity data")}</div>`;
     }
 
     return html`
@@ -423,16 +465,16 @@ export class ClimateControlDialog extends LitElement {
 
     return html`
       <div class="section">
-        <div class="section-title">HVAC Mode</div>
+        <div class="section-title">${t("HVAC Mode")}</div>
         <select 
           class="mode-select"
           .value=${this.stateObj.state || ''}
           @change=${this._handleHvacModeChange}
         >
-          <option value="">-- No Change --</option>
+          <option value="">${t("-- No Change --")}</option>
           ${this.stateObj.attributes.hvac_modes.map(mode => html`
             <option value="${mode}" ?selected=${this.stateObj!.state === mode}>
-              ${this._capitalize(mode)}
+              ${t(this._capitalize(mode))}
             </option>
           `)}
         </select>
@@ -457,32 +499,32 @@ export class ClimateControlDialog extends LitElement {
     // Determine class, track fill, and label based on current mode
     let inputClass = '';
     let trackFill = tempPercent;
-    let label = 'Set to';
+    let label = t('Set to');
     
     if (currentMode === 'heat_cool') {
       inputClass = 'heat-cool';
     } else if (currentMode === 'cool') {
       inputClass = 'cooling';
       trackFill = 100 - tempPercent;
-      label = 'Cool to';
+      label = t('Cool to');
     } else if (currentMode === 'heat') {
       inputClass = 'heating';
-      label = 'Heat to';
+      label = t('Heat to');
     }
 
     return html`
       <div class="section">
-        <div class="section-title">Target Temperature</div>
+        <div class="section-title">${t("Target Temperature")}</div>
         <div class="temp-range-control">
           <div class="temp-range-labels" style="justify-content: center;">
             <div class="temp-range-value">
-              <span class="temp-range-label">${label}</span>
+              <span class="temp-range-label">${t(label)}</span>
               <span class="temp-range-number">${temperature}°</span>
             </div>
           </div>
           <div class="dual-range-container">
             <input 
-              type="range" 
+              type="range" aria-label="${t("Target Temperature")}"
               class="dual-range-input ${inputClass}"
               min="${min_temp}"
               max="${max_temp}"
@@ -523,17 +565,17 @@ export class ClimateControlDialog extends LitElement {
     if (heatOnly) {
       return html`
         <div class="section">
-          <div class="section-title">Target Temperature</div>
+          <div class="section-title">${t("Target Temperature")}</div>
           <div class="temp-range-control">
             <div class="temp-range-labels" style="justify-content: center;">
               <div class="temp-range-value">
-                <span class="temp-range-label">Heat to</span>
+                <span class="temp-range-label">${t("Heat to")}</span>
                 <span class="temp-range-number">${target_temp_low}°</span>
               </div>
             </div>
             <div class="dual-range-container">
               <input 
-                type="range" 
+                type="range" aria-label="${t("Heat to")}"
                 class="dual-range-input heating"
                 min="${min_temp}"
                 max="${max_temp}"
@@ -554,17 +596,17 @@ export class ClimateControlDialog extends LitElement {
     if (coolOnly) {
       return html`
         <div class="section">
-          <div class="section-title">Target Temperature</div>
+          <div class="section-title">${t("Target Temperature")}</div>
           <div class="temp-range-control">
             <div class="temp-range-labels" style="justify-content: center;">
               <div class="temp-range-value">
-                <span class="temp-range-label">Cool to</span>
+                <span class="temp-range-label">${t("Cool to")}</span>
                 <span class="temp-range-number">${target_temp_high}°</span>
               </div>
             </div>
             <div class="dual-range-container">
               <input 
-                type="range" 
+                type="range" aria-label="${t("Cool to")}"
                 class="dual-range-input cooling"
                 min="${min_temp}"
                 max="${max_temp}"
@@ -584,15 +626,15 @@ export class ClimateControlDialog extends LitElement {
     // Render dual range (both heat and cool, heat_cool, auto, or off)
     return html`
       <div class="section">
-        <div class="section-title">Temperature Range</div>
+        <div class="section-title">${t("Temperature Range")}</div>
         <div class="temp-range-control">
           <div class="temp-range-labels">
             <div class="temp-range-value">
-              <span class="temp-range-label">Heat to</span>
+              <span class="temp-range-label">${t("Heat to")}</span>
               <span class="temp-range-number">${target_temp_low}°</span>
             </div>
             <div class="temp-range-value">
-              <span class="temp-range-label">Cool to</span>
+              <span class="temp-range-label">${t("Cool to")}</span>
               <span class="temp-range-number">${target_temp_high}°</span>
             </div>
           </div>
@@ -603,7 +645,7 @@ export class ClimateControlDialog extends LitElement {
               </div>
             ` : ''}
             <input 
-              type="range" 
+              type="range" aria-label="${t("Heat to")}"
               class="dual-range-input ${!isOffOrAuto ? 'heating' : ''}"
               min="${min_temp}"
               max="${max_temp}"
@@ -615,7 +657,7 @@ export class ClimateControlDialog extends LitElement {
               style="top: 0; --track-fill: ${lowPercent}%;"
             />
             <input 
-              type="range" 
+              type="range" aria-label="${t("Cool to")}"
               class="dual-range-input ${!isOffOrAuto ? 'cooling' : ''}"
               min="${min_temp}"
               max="${max_temp}"
@@ -644,17 +686,17 @@ export class ClimateControlDialog extends LitElement {
 
     return html`
       <div class="section">
-        <div class="section-title">Target Humidity</div>
+        <div class="section-title">${t("Target Humidity")}</div>
         <div class="temp-range-control">
           <div class="temp-range-labels" style="justify-content: center;">
             <div class="temp-range-value">
-              <span class="temp-range-label">Set to</span>
+              <span class="temp-range-label">${t("Set to")}</span>
               <span class="temp-range-number">${target_humidity}%</span>
             </div>
           </div>
           <div class="dual-range-container">
             <input 
-              type="range" 
+              type="range" aria-label="${t("Target Humidity")}"
               class="dual-range-input"
               min="${min_humidity}"
               max="${max_humidity}"
@@ -706,16 +748,16 @@ export class ClimateControlDialog extends LitElement {
 
     return html`
       <div class="section">
-        <div class="section-title">Fan Mode</div>
+        <div class="section-title">${t("Fan Mode")}</div>
         <select 
           class="mode-select"
           .value=${this.stateObj.attributes.fan_mode || ''}
           @change=${this._handleFanModeChange}
         >
-          <option value="">-- No Change --</option>
+          <option value="">${t("-- No Change --")}</option>
           ${this.stateObj.attributes.fan_modes!.map(mode => html`
             <option value="${mode}" ?selected=${this.stateObj!.attributes.fan_mode === mode}>
-              ${this._capitalize(mode)}
+              ${t(this._capitalize(mode))}
             </option>
           `)}
         </select>
@@ -728,16 +770,16 @@ export class ClimateControlDialog extends LitElement {
 
     return html`
       <div class="section">
-        <div class="section-title">Thermostat Preset</div>
+        <div class="section-title">${t("Thermostat Preset")}</div>
         <select 
           class="mode-select"
           .value=${this.stateObj.attributes.preset_mode || ''}
           @change=${this._handlePresetModeChange}
         >
-          <option value="">-- No Change --</option>
+          <option value="">${t("-- No Change --")}</option>
           ${this.stateObj.attributes.preset_modes!.map(mode => html`
             <option value="${mode}" ?selected=${this.stateObj!.attributes.preset_mode === mode}>
-              ${this._capitalize(mode)}
+              ${t(this._capitalize(mode))}
             </option>
           `)}
         </select>
@@ -750,16 +792,16 @@ export class ClimateControlDialog extends LitElement {
 
     return html`
       <div class="section">
-        <div class="section-title">Swing (Vertical)</div>
+        <div class="section-title">${t("Swing (Vertical)")}</div>
         <select 
           class="mode-select"
           .value=${this.stateObj.attributes.swing_mode || ''}
           @change=${this._handleSwingModeChange}
         >
-          <option value="">-- No Change --</option>
+          <option value="">${t("-- No Change --")}</option>
           ${this.stateObj.attributes.swing_modes!.map(mode => html`
             <option value="${mode}" ?selected=${this.stateObj!.attributes.swing_mode === mode}>
-              ${this._capitalize(mode)}
+              ${t(this._capitalize(mode))}
             </option>
           `)}
         </select>
@@ -772,16 +814,16 @@ export class ClimateControlDialog extends LitElement {
 
     return html`
       <div class="section">
-        <div class="section-title">Swing (Horizontal)</div>
+        <div class="section-title">${t("Swing (Horizontal)")}</div>
         <select 
           class="mode-select"
           .value=${this.stateObj.attributes.swing_horizontal_mode || ''}
           @change=${this._handleSwingHorizontalModeChange}
         >
-          <option value="">-- No Change --</option>
+          <option value="">${t("-- No Change --")}</option>
           ${this.stateObj.attributes.swing_horizontal_modes!.map(mode => html`
             <option value="${mode}" ?selected=${this.stateObj!.attributes.swing_horizontal_mode === mode}>
-              ${this._capitalize(mode)}
+              ${t(this._capitalize(mode))}
             </option>
           `)}
         </select>
@@ -796,9 +838,9 @@ export class ClimateControlDialog extends LitElement {
 
     return html`
       <div class="section">
-        <div class="section-title">Auxiliary Heat</div>
+        <div class="section-title">${t("Auxiliary Heat")}</div>
         <div class="toggle-row">
-          <span class="toggle-label">Aux Heat</span>
+          <span class="toggle-label">${t("Aux Heat")}</span>
           <label class="toggle-switch">
             <input 
               type="checkbox" 
@@ -868,7 +910,7 @@ export class ClimateControlDialog extends LitElement {
     return html`
       <div class="section">
         <div class="toggle-row">
-          <span class="toggle-label">No Temperature Change</span>
+          <span class="toggle-label">${t("No Temperature Change")}</span>
           <label class="toggle-switch">
             <input
               type="checkbox"

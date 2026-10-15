@@ -4,6 +4,7 @@
   "private": true,
   "description": "Climate Scheduler for Home Assistant",
   "scripts": {
+    "dev": "node dev/server.mjs",
     "build": "rollup -c",
     "watch": "rollup -c --watch",
     "type-check": "tsc --noEmit"

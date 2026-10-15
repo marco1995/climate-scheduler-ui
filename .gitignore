@@ -44,3 +44,5 @@ package-lock.json
 .pytest_cache/
 .coverage
 htmlcov/
+
+.npm-cache/

@@ -2,6 +2,7 @@
 import logging
 import copy
 import re
+import math
 from typing import Any, Dict, List, Optional
 from datetime import datetime, time
 
@@ -36,6 +37,7 @@ def validate_node(node: Dict[str, Any]) -> bool:
         # Normalize 24:00 to 23:59 to avoid clash with 00:00 on next day
         if h == 24 and m == 0:
             h, m = 23, 59
+            node["time"] = "23:59"
         if not (0 <= h <= 23 and 0 <= m <= 59):
             _LOGGER.error(f"Time out of range: {time_str}")
             return False
@@ -45,7 +47,8 @@ def validate_node(node: Dict[str, Any]) -> bool:
     
     # Validate temperature is numeric
     try:
-        float(node["temp"])
+        if not math.isfinite(float(node["temp"])):
+            return False
     except (ValueError, TypeError):
         _LOGGER.error(f"Invalid temperature: {node.get('temp')}")
         return False
@@ -63,7 +66,15 @@ class ScheduleStorage:
         self._data: Dict[str, Any] = {}
 
     async def async_load(self) -> None:
-        """Load data from storage."""
+        """Load and migrate data without synchronizing partial migration state."""
+        self._loading = True
+        try:
+            await self._async_load_data()
+        finally:
+            self._loading = False
+
+    async def _async_load_data(self) -> None:
+        """Run ordered migrations and persist the completed result."""
         data = await self._store.async_load()
         if data is None:
             self._data = {"groups": {}, "settings": {}, "advance_history": {}}
@@ -156,6 +167,9 @@ class ScheduleStorage:
             await self._migrate_profiles_to_global()
             # Normalize older tagged legacy profile names to metadata format
             await self._migrate_legacy_profile_name_suffixes()
+        self._loading = False
+        # Normalize old end-of-day nodes before they reach the scheduler.
+        self._normalize_stored_times(self._data)
         # Ensure global profile structure exists and schedule/profile views are synchronized
         self._ensure_global_profiles_initialized()
         self._sync_group_profile_views()
@@ -191,6 +205,7 @@ class ScheduleStorage:
             except Exception as e:
                 _LOGGER.error(f"Failed to persist cleaned settings: {e}")
         _LOGGER.debug(f"Loaded schedule data: {self._data}")
+        await self.async_save()
     
     async def _migrate_to_day_schedules(self) -> None:
         """Migrate existing schedules to day-based format."""
@@ -319,9 +334,25 @@ class ScheduleStorage:
 
     async def async_save(self) -> None:
         """Save data to storage."""
+        # Intermediate migrations must not initialize global profiles or replace
+        # the legacy schedules that the following migration still needs to read.
+        if getattr(self, "_loading", False):
+            return
+        self._normalize_stored_times(self._data)
         self._sync_group_profile_views()
         await self._store.async_save(self._data)
         _LOGGER.debug(f"Saved schedule data: {self._data}")
+
+    @staticmethod
+    def _normalize_stored_times(value) -> None:
+        if isinstance(value, dict):
+            if value.get("time") == "24:00":
+                value["time"] = "23:59"
+            for child in value.values():
+                ScheduleStorage._normalize_stored_times(child)
+        elif isinstance(value, list):
+            for child in value:
+                ScheduleStorage._normalize_stored_times(child)
 
     def _get_default_schedule_template(self) -> List[Dict[str, Any]]:
         """Return configured default schedule template with validation fallback."""
@@ -337,7 +368,11 @@ class ScheduleStorage:
             if valid_nodes:
                 return valid_nodes
 
-        return copy.deepcopy(DEFAULT_SCHEDULE)
+        nodes = copy.deepcopy(DEFAULT_SCHEDULE)
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+            for node in nodes:
+                node["temp"] = round(node["temp"] * 9 / 5 + 32, 1)
+        return nodes
 
     def _build_schedules_from_template(self, default_schedule: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
         """Build schedule dictionary from the single default schedule template."""
@@ -679,6 +714,16 @@ class ScheduleStorage:
         
         return []
 
+    def _single_entity_group_name(self, name: str, entity_id: str) -> str:
+        """Choose a stable display name without overwriting a same-named room."""
+        groups = self._data.get("groups", {})
+        candidate = name
+        suffix = 2
+        while candidate in groups and groups[candidate].get("entities") != [entity_id]:
+            candidate = f"{name} ({entity_id})" if suffix == 2 else f"{name} ({entity_id}) {suffix}"
+            suffix += 1
+        return candidate
+
     async def async_set_schedule(self, entity_id: str, nodes: List[Dict[str, Any]], day: Optional[str] = None, schedule_mode: Optional[str] = None) -> None:
         """Set schedule nodes for an entity by creating/updating its single-entity group."""
         # Check if entity is in a multi-entity group
@@ -697,7 +742,7 @@ class ScheduleStorage:
             friendly_name = entity_id
             if state := self.hass.states.get(entity_id):
                 friendly_name = state.attributes.get("friendly_name", entity_id)
-            single_group_name = friendly_name
+            single_group_name = self._single_entity_group_name(friendly_name, entity_id)
         
         # Ensure groups dict exists
         if "groups" not in self._data:
@@ -731,7 +776,7 @@ class ScheduleStorage:
         friendly_name = entity_id
         if state := self.hass.states.get(entity_id):
             friendly_name = state.attributes.get("friendly_name", entity_id)
-        single_group_name = friendly_name
+        single_group_name = self._single_entity_group_name(friendly_name, entity_id)
         
         if "groups" not in self._data:
             self._data["groups"] = {}
@@ -828,7 +873,7 @@ class ScheduleStorage:
             friendly_name = entity_id
             if state := self.hass.states.get(entity_id):
                 friendly_name = state.attributes.get("friendly_name", entity_id)
-            single_group_name = friendly_name
+            single_group_name = self._single_entity_group_name(friendly_name, entity_id)
             
             if ignored:
                 # Create with empty schedule and ignored=True
@@ -1476,7 +1521,7 @@ class ScheduleStorage:
                 friendly_name = entity_id
                 if state := self.hass.states.get(entity_id):
                     friendly_name = state.attributes.get("friendly_name", entity_id)
-                single_group_name = friendly_name
+                single_group_name = self._single_entity_group_name(friendly_name, entity_id)
                 
                 if "groups" not in self._data:
                     self._data["groups"] = {}
@@ -1550,6 +1595,9 @@ class ScheduleStorage:
         """
         if group_name not in self._data.get("groups", {}):
             raise ValueError(f"Group '{group_name}' does not exist")
+        nodes = copy.deepcopy(nodes)
+        if not all(validate_node(node) for node in nodes):
+            raise ValueError("Invalid schedule node")
         
         group_data = self._data["groups"][group_name]
 

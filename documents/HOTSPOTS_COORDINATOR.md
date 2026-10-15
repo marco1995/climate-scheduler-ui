@@ -22,6 +22,8 @@ Target: custom_components/climate_scheduler/coordinator.py
 - Node application must be deterministic for current time/day.
 - Manual advance must resolve next node across day boundaries (today-first, otherwise next valid day) and report target-node day.
 - Overrides expire exactly at intended target time.
+- manual_overrides stores manual target/profile/deadline separately from advance override_until and advance history.
+- Manual expiry/profile change clears the last applied signature so the schedule is reapplied.
 - Re-application loops avoided via last-state signatures.
 - Scheduled events fire on node-time transitions, not every value write.
 - Climate apply sequencing is mode-first then temperature.

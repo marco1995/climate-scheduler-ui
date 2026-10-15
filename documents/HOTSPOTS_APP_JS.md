@@ -26,7 +26,8 @@ Target: custom_components/climate_scheduler/frontend/app.js
 - editingProfile
 - currentDay, currentScheduleMode, currentSchedule
 - graph, nodeSettingsTimeline
-- isLoadingSchedule, isSaveInProgress, pendingSaveNeeded, saveTimeout
+- isLoadingSchedule, isSaveInProgress, pendingSaveNeeded, saveTimeout, pendingScheduleSaves
+- pendingScheduleSaves holds copied nodes and captured destinations; never reconstruct a queued destination from current editor globals.
 - SAVE_DEBOUNCE_MS (300)
 
 ## Common Regressions

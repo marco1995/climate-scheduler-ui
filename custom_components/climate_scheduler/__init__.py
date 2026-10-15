@@ -253,52 +253,30 @@ async def _register_frontend_resources(hass: HomeAssistant) -> None:
         base_url = f"/{DOMAIN}/static/climate-scheduler-card.js"
         url = f"{base_url}?v={frontend_version}"
         
-        # Check for old standalone card installations and remove them
-        old_card_patterns = [
-            "/hacsfiles/climate-scheduler/",
-            "/local/community/climate-scheduler/",
-            "climate-scheduler-card.js",
-            f"/{DOMAIN}/static/"
-        ]
-        
+        # Keep one bundled resource and remove every duplicate/known legacy URL.
+        # Match exact owned paths so unrelated cards are never removed.
+        owned_paths = {
+            base_url,
+            "/local/climate_scheduler/climate-scheduler-card.js",
+            "/hacsfiles/climate-scheduler/climate-scheduler-card.js",
+            "/local/community/climate-scheduler/climate-scheduler-card.js",
+        }
         existing_entry = None
-        removed_old = False
-        for entry in list(resources.async_items()):
-            entry_url = entry["url"]
-            entry_base_url = entry_url.split("?")[0]
-            
-            # Check if this is our new bundled card
-            if entry_base_url == base_url:
-                existing_entry = entry
+        for resource in list(resources.async_items()):
+            path = resource.get("url", "").split("?", 1)[0]
+            if path not in owned_paths:
                 continue
-            
-            # Check if this is an old standalone card installation
-            if any(pattern in entry_url for pattern in old_card_patterns):
-                _LOGGER.info("Removing old standalone card registration: %s", entry_url)
-                await resources.async_delete_item(entry["id"])
-                removed_old = True
-
-        # If there's an existing bundled registration, remove it first so
-        # we always create a fresh entry (ensures consistent behavior on
-        # install/update/reboot and avoids stale IDs or metadata).
-        if existing_entry:
-            try:
-                _LOGGER.info("Removing existing bundled frontend card registration: %s", existing_entry.get("url"))
-                await resources.async_delete_item(existing_entry["id"])
-            except Exception:  # noqa: BLE001
-                _LOGGER.debug("Failed to remove existing bundled frontend resource, will attempt to (re)create it")
-
-        # Create a new resource entry for the bundled card
-        if hasattr(resources, "async_create_item"):
-            await resources.async_create_item({"res_type": "module", "url": url})
-            
-            if removed_old:
-                _LOGGER.info("Successfully migrated to bundled frontend card (version %s)", frontend_version)
+            if path == base_url and existing_entry is None:
+                existing_entry = resource
             else:
-                _LOGGER.info("Successfully registered bundled frontend card (version %s)", frontend_version)
+                await resources.async_delete_item(resource["id"])
+
+        if existing_entry:
+            if existing_entry.get("url") != url or existing_entry.get("type") != "module":
+                await resources.async_update_item(existing_entry["id"], {"res_type": "module", "url": url})
         else:
-            _LOGGER.warning("Cannot auto-register card: Lovelace resources are in YAML mode")
-        
+            await resources.async_create_item({"res_type": "module", "url": url})
+
         # Note: Version mismatch detection and refresh notification is handled by the frontend
         # JavaScript, which can accurately detect when the browser cache is stale
 

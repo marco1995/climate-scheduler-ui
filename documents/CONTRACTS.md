@@ -25,7 +25,7 @@ Required:
 
 Invariants:
 - storage validate_node enforces time format and numeric temp.
-- 24:00 is normalized to 23:59 in storage validation.
+- 24:00 is normalized to 23:59 on validation, load and save; frontend rounding must produce canonical HH:MM.
 - UI keeps at least one node (delete guard in node settings).
 - noChange means skip temperature apply but allow mode application.
 - Frontend no-temperature-change toggle locks node temperature to previous-node value with wrap-around; single-node schedules retain their own value.
@@ -118,8 +118,8 @@ HA bus event:
 
 ## Save Pipeline Contract (frontend runtime)
 
-- Save requests are debounced and serialized via `isSaveInProgress`.
-- If save is requested while schedule is loading, frontend sets `pendingSaveNeeded` and re-runs save after loading completes.
+- Save requests capture copied nodes and their group/profile/day/mode/enabled destination at edit time, then debounce and serialize via `isSaveInProgress`. Only matching destinations coalesce.
+- If save is requested while schedule is loading, its captured snapshot is queued and flushed after loading completes.
 - Missing schedule-enabled UI element must not block schedule persistence.
 
 Frontend timeline events:
@@ -127,7 +127,18 @@ Frontend timeline events:
 - keyframe-moved: { index, keyframe }
 - keyframe-deleted: { index, keyframe } or explicit dispatch
 
+## Temperature and manual overrides
+
+- Climate state attributes and climate service targets use HA system temperature units.
+- Group limits use the intersection of member limits; disjoint ranges make the group unavailable.
+- Scheduled/advanced targets clamp to settings, then to each member's advertised limits.
+- Coldest/warmest sensor native units match the HA state values they consume.
+- Manual group targets hold until the next actual scheduled node across all three schedule modes.
+- Manual holds are separate from advance history/status and are not persisted across reloads.
+
 ## Migration Notes
+
+Intermediate migration saves are deferred until migration completes, before global schedule views synchronize.
 
 storage async_load migrations:
 - day schedule migration

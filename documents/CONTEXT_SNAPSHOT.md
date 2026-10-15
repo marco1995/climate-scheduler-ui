@@ -45,6 +45,14 @@ Purpose: compact handoff for future Copilot sessions.
 - storage.py migration + schedule/profile normalization logic.
 - services.py large service/schema surface.
 
+## Issue fixes (2026-10-15)
+
+- See `documents/ISSUE_FIXES.md` for the nine implemented issue packages and verification limits.
+- Debounced saves retain immutable destination/data snapshots across editor transitions.
+- Migration does not synchronize partially migrated data; entity profile updates use global views.
+- Manual group overrides are separate runtime state from advance overrides and expire at the next real weekly node.
+- HA units propagate through group bounds, device setpoints and temperature sensors.
+
 ## Open Risks
 
 - Large-file regression risk in orchestration modules.

@@ -16,6 +16,28 @@ npm install
 
 ## Development
 
+### Local design preview (no Home Assistant required)
+
+```bash
+npm install
+npm run dev
+```
+
+Open http://127.0.0.1:5173 in your browser. The preview loads the real panel
+with simulated rooms, groups, profiles, schedules and temperature history.
+Use the toolbar to switch light/dark mode or reset the demo. Changes to demo
+schedules and settings are saved in this browser's local storage.
+
+TypeScript components are built on startup and watched for changes. Reload
+the browser after editing TypeScript, JavaScript or CSS. Use browser developer
+tools' device emulation to check mobile layouts. Stop with Ctrl+C.
+To use another port in PowerShell: `$env:PORT=5174; npm run dev`.
+
+The demo does not connect to HA or control real devices. Device commands and
+advance status are simulated; actual scheduling, events, diagnostics and
+backend maintenance require Home Assistant. Unsupported actions show an error.
+All demo code lives under `dev/` and is not loaded by the production panel.
+
 ### Building
 
 Build TypeScript files:

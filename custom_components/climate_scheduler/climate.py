@@ -2,7 +2,6 @@
 import asyncio
 import logging
 from typing import Any, Dict, List, Optional
-from datetime import datetime, timedelta, time
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -11,11 +10,11 @@ from homeassistant.components.climate import (
     HVACAction,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import HeatingSchedulerCoordinator
@@ -114,7 +113,7 @@ class ClimateSchedulerGroupEntity(CoordinatorEntity, ClimateEntity):
         # Temperature control settings
         self._attr_min_temp = 5.0
         self._attr_max_temp = 35.0
-        self._attr_target_temp_step = 0.5
+        self._attr_target_temperature_step = 0.5
         
         # Simplified modes: Auto (Active - follows schedule) or Off (Idle)
         self._attr_hvac_modes = [
@@ -151,13 +150,13 @@ class ClimateSchedulerGroupEntity(CoordinatorEntity, ClimateEntity):
             first_member = self.hass.states.get(self._member_entities[0])
             if first_member:
                 member_step = first_member.attributes.get("target_temp_step", 0.5)
-                self._attr_target_temp_step = member_step
+                self._attr_target_temperature_step = member_step
         
         _LOGGER.debug(
             "Climate entity %s initialized with temperature unit: %s, step: %s",
             self.entity_id,
             self._attr_temperature_unit,
-            self._attr_target_temp_step,
+            self._attr_target_temperature_step,
         )
         # Perform initial state update
         self._update_state()
@@ -184,6 +183,8 @@ class ClimateSchedulerGroupEntity(CoordinatorEntity, ClimateEntity):
         group_data = self._storage._data.get("groups", {}).get(self._group_name)
         if group_data:
             self._enabled = group_data.get("enabled", True)
+            group_data = self._storage._project_group_runtime_view(group_data)
+            self._member_entities = list(group_data.get("entities", []))
             profiles = group_data.get("profiles", {})
             self._attr_preset_modes = list(profiles.keys()) if profiles else []
             self._attr_preset_mode = group_data.get("active_profile", "Default")
@@ -194,6 +195,18 @@ class ClimateSchedulerGroupEntity(CoordinatorEntity, ClimateEntity):
     
     def _update_state(self) -> None:
         """Update entity state from member entities and schedule."""
+        settings = self._storage._data.get("settings", {})
+        fahrenheit = self.hass.config.units.temperature_unit == UnitOfTemperature.FAHRENHEIT
+        self._attr_temperature_unit = self.hass.config.units.temperature_unit
+        member_states = [self.hass.states.get(e) for e in self._member_entities]
+        lows = [float(s.attributes["min_temp"]) for s in member_states if s and s.attributes.get("min_temp") is not None]
+        highs = [float(s.attributes["max_temp"]) for s in member_states if s and s.attributes.get("max_temp") is not None]
+        self._attr_min_temp = max(lows) if lows else settings.get("min_temp", 41.0 if fahrenheit else 5.0)
+        self._attr_max_temp = min(highs) if highs else settings.get("max_temp", 95.0 if fahrenheit else 35.0)
+        if self._attr_min_temp > self._attr_max_temp:
+            self._attr_available = False
+            return
+        self._attr_available = True
         # 1. Calculate average current temperature from members (in their native unit)
         temps = []
         temp_map = {}
@@ -239,8 +252,8 @@ class ClimateSchedulerGroupEntity(CoordinatorEntity, ClimateEntity):
             self._attr_hvac_action = HVACAction.IDLE
         
         # 3. Get active node from schedule to determine setpoint
-        current_time = datetime.now().time()
-        current_day = datetime.now().strftime('%a').lower()
+        current_time = dt_util.now().time()
+        current_day = dt_util.now().strftime('%a').lower()
         
         # Get the schedule data from storage (synchronously accessible)
         group_data = self._storage._data.get("groups", {}).get(self._group_name, {})
@@ -316,10 +329,16 @@ class ClimateSchedulerGroupEntity(CoordinatorEntity, ClimateEntity):
             if member_targets:
                 self._attr_target_temperature = round(sum(member_targets) / len(member_targets), 1)
             else:
-                self._attr_target_temperature = 20.0  # Default fallback
+                self._attr_target_temperature = 68.0 if fahrenheit else 20.0
             
             _LOGGER.debug(f"No schedule setpoint for {self._group_name}, using fallback: {self._attr_target_temperature}")
         
+        manual = getattr(self.coordinator, "manual_overrides", {})
+        targets = [manual[e]["temperature"] for e in self._member_entities
+                   if e in manual and (manual[e]["until"] is None or dt_util.now() < manual[e]["until"])]
+        if targets:
+            self._attr_target_temperature = round(sum(targets) / len(targets), 1)
+
         # HVAC mode reflects enabled state (not member states)
         # This is already set in _handle_coordinator_update
         
@@ -377,6 +396,8 @@ class ClimateSchedulerGroupEntity(CoordinatorEntity, ClimateEntity):
             _LOGGER.warning("No temperature provided to async_set_temperature")
             return
         
+        await self.coordinator.async_set_manual_override(self._group_name, temperature)
+
         # Apply temperature to all member entities
         for entity_id in self._member_entities:
             try:
@@ -391,40 +412,8 @@ class ClimateSchedulerGroupEntity(CoordinatorEntity, ClimateEntity):
                 )
                 _LOGGER.info(f"Set temperature {temperature} for {entity_id}")
             except Exception as e:
+                self.coordinator.manual_overrides.pop(entity_id, None)
                 _LOGGER.error(f"Failed to set temperature for {entity_id}: {e}")
-        
-        # Set override for each member until next scheduled node
-        current_time = datetime.now().time()
-        current_day = datetime.now().strftime('%a').lower()
-        
-        group_data = self._storage._data.get("groups", {}).get(self._group_name, {})
-        schedules = group_data.get("schedules", {})
-        schedule_data = schedules.get(current_day)
-        
-        if schedule_data and "nodes" in schedule_data:
-            nodes = schedule_data["nodes"]
-            next_node = self._storage.get_next_node(nodes, current_time)
-            if next_node:
-                # Calculate when override expires (at next node time)
-                next_node_time_str = next_node["time"]
-                next_node_hours, next_node_minutes = map(int, next_node_time_str.split(":"))
-                override_until = datetime.now().replace(
-                    hour=next_node_hours, 
-                    minute=next_node_minutes, 
-                    second=0, 
-                    microsecond=0
-                )
-                # If next node time is earlier in the day than current time, it's tomorrow
-                if override_until <= datetime.now():
-                    override_until += timedelta(days=1)
-                
-                # Set override for all members
-                for entity_id in self._member_entities:
-                    self.coordinator.override_until[entity_id] = override_until
-                
-                _LOGGER.info(
-                    f"Set manual override for group {self._group_name} until {override_until}"
-                )
         
         # Update target temperature immediately and trigger state refresh
         self._attr_target_temperature = temperature
@@ -456,7 +445,10 @@ class ClimateSchedulerGroupEntity(CoordinatorEntity, ClimateEntity):
         except ValueError as err:
             _LOGGER.error(f"Profile switch failed for group {self._group_name}: {err}")
             return
-        
+        for entity_id in self._member_entities:
+            self.coordinator.manual_overrides.pop(entity_id, None)
+            self.coordinator.last_node_states.pop(entity_id, None)
+
         # Force coordinator refresh to apply new schedule immediately
         await self.coordinator.async_request_refresh()
         
@@ -475,6 +467,8 @@ class ClimateSchedulerGroupEntity(CoordinatorEntity, ClimateEntity):
         """Disable the schedule."""
         # Disable schedule for all member entities
         for entity_id in self._member_entities:
+            self.coordinator.manual_overrides.pop(entity_id, None)
+            self.coordinator.last_node_states.pop(entity_id, None)
             await self._storage.async_set_enabled(entity_id, False)
         self._enabled = False
         self.async_write_ha_state()

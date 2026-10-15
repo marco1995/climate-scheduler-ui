@@ -27,6 +27,482 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
+/** UI translations. Keep device values, service names and stored profile IDs unchanged. */
+const de = {
+    "HOME CLIMATE": "RAUMKLIMA",
+    "Your rooms. Your rhythm.": "Deine Räume. Dein Rhythmus.",
+    "Monitored": "Mit Zeitplan",
+    "Unmonitored": "Ohne Zeitplan",
+    "Profiles": "Profile",
+    "Monitor": "Zeitsteuerung aktivieren",
+    "Unmonitor": "Zeitsteuerung deaktivieren",
+    "Instructions": "Anleitung",
+    "Settings": "Einstellungen",
+    "Schedule Settings": "Zeitplan-Einstellungen",
+    "Target Temperature": "Zieltemperatur",
+    "Target Humidity": "Zielluftfeuchtigkeit",
+    "Temperature": "Temperatur",
+    "Temperature (°C)": "Temperatur (°C)",
+    "Temperature (°F)": "Temperatur (°F)",
+    "Time of Day (24hr)": "Uhrzeit (24 h)",
+    "Set to": "Einstellen auf",
+    "Heat to": "Heizen auf",
+    "Cool to": "Kühlen auf",
+    "HVAC Mode": "Betriebsart",
+    "Fan Mode": "Lüftermodus",
+    "Thermostat Preset": "Thermostat-Voreinstellung",
+    "Swing (Vertical)": "Schwenken (vertikal)",
+    "Swing (Horizontal)": "Schwenken (horizontal)",
+    "Auxiliary Heat": "Zusatzheizung",
+    "Aux Heat": "Zusatzheizung",
+    "Temperature Change": "Temperaturänderung",
+    "No Temperature Change": "Keine Temperaturänderung",
+    "-- No Change --": "-- Keine Änderung --",
+    "No Change": "Keine Änderung",
+    "Legend": "Legende",
+    "Save": "Speichern",
+    "Cancel": "Abbrechen",
+    "Continue": "Fortfahren",
+    "Confirm action": "Aktion bestätigen",
+    "Please note": "Hinweis",
+    "Enter a name": "Namen eingeben",
+    "Name": "Name",
+    "Done": "Fertig",
+    "Copy": "Kopieren",
+    "Paste": "Einfügen",
+    "Undo": "Rückgängig",
+    "Advance": "Vorziehen",
+    "Clear": "Leeren",
+    "Delete": "Löschen",
+    "Close": "Schließen",
+    "Enabled": "Aktiviert",
+    "Disabled": "Deaktiviert",
+    "Enable": "Aktivieren",
+    "Disable": "Deaktivieren",
+    "All Days": "Alle Tage",
+    "All days": "Alle Tage",
+    "Weekday": "Werktage",
+    "Weekdays": "Werktage",
+    "Weekend": "Wochenende",
+    "Mon": "Mo",
+    "Tue": "Di",
+    "Wed": "Mi",
+    "Thu": "Do",
+    "Fri": "Fr",
+    "Sat": "Sa",
+    "Sun": "So",
+    "Monday": "Montag",
+    "Tuesday": "Dienstag",
+    "Wednesday": "Mittwoch",
+    "Thursday": "Donnerstag",
+    "Friday": "Freitag",
+    "Saturday": "Samstag",
+    "Sunday": "Sonntag",
+    "Schedule (All Days)": "Zeitplan (alle Tage)",
+    "Copy Schedule": "Zeitplan kopieren",
+    "Paste Schedule": "Zeitplan einfügen",
+    "Clear Schedule": "Zeitplan löschen",
+    "Clear Schedule?": "Zeitplan löschen?",
+    "Clear Advance History": "Verlauf vorgezogener Schaltpunkte löschen",
+    "Create New Group": "Neue Gruppe erstellen",
+    "Group Name:": "Gruppenname:",
+    "Create Group": "Gruppe erstellen",
+    "Add to Group": "Zur Gruppe hinzufügen",
+    "Edit Group": "Gruppe bearbeiten",
+    "Delete Group": "Gruppe löschen",
+    "Filter by name...": "Nach Namen filtern …",
+    "Select a profile to edit...": "Profil zum Bearbeiten auswählen …",
+    "Create new profile": "Neues Profil erstellen",
+    "Rename profile": "Profil umbenennen",
+    "Delete profile": "Profil löschen",
+    "Previous keyframe": "Vorheriger Schaltpunkt",
+    "Next keyframe": "Nächster Schaltpunkt",
+    "Click to expand": "Zum Aufklappen klicken",
+    "Current": "Aktuell",
+    "Target": "Ziel",
+    "Status": "Status",
+    "Time": "Uhrzeit",
+    "Node Settings": "Schaltpunkt-Einstellungen",
+    "Schedule copied": "Zeitplan kopiert",
+    "Schedule pasted": "Zeitplan eingefügt",
+    "Profile saved successfully": "Profil erfolgreich gespeichert",
+    "Failed to save profile changes": "Profiländerungen konnten nicht gespeichert werden",
+    "Failed to load climate entities": "Klimageräte konnten nicht geladen werden",
+    "Failed to delete group": "Gruppe konnte nicht gelöscht werden",
+    "Please enter a group name": "Bitte einen Gruppennamen eingeben",
+    "A group with this name already exists": "Eine Gruppe mit diesem Namen existiert bereits",
+    "Failed to create group": "Gruppe konnte nicht erstellt werden",
+    "Please select or create a group": "Bitte eine Gruppe auswählen oder erstellen",
+    "Failed to add entity to group": "Gerät konnte nicht zur Gruppe hinzugefügt werden",
+    "Minimum temperature must be a number": "Die Mindesttemperatur muss eine Zahl sein",
+    "Maximum temperature must be a number": "Die Höchsttemperatur muss eine Zahl sein",
+    "Cannot delete the last node. A schedule must have at least one node.": "Der letzte Schaltpunkt kann nicht gelöscht werden. Ein Zeitplan benötigt mindestens einen Schaltpunkt.",
+    "Delete this node?": "Diesen Schaltpunkt löschen?",
+    "Clear all nodes for this profile?": "Alle Schaltpunkte dieses Profils löschen?",
+    "Enter name for new profile:": "Namen für das neue Profil eingeben:",
+    "Reset to default schedule settings?": "Zeitplan-Einstellungen zurücksetzen?",
+    "Clear the default schedule? All nodes will be removed.": "Standardzeitplan löschen? Alle Schaltpunkte werden entfernt.",
+    "This action cannot be undone.": "Diese Aktion kann nicht rückgängig gemacht werden.",
+    "Schedule mode": "Zeitplanmodus",
+    "Copy schedule": "Zeitplan kopieren",
+    "Paste schedule": "Zeitplan einfügen",
+    "Undo last change": "Letzte Änderung rückgängig machen",
+    "Save schedule": "Zeitplan speichern",
+    "Advance to next scheduled node": "Zum nächsten Schaltpunkt vorziehen",
+    "Stop monitoring this thermostat": "Zeitsteuerung dieses Thermostats deaktivieren",
+    "Clear entire schedule": "Gesamten Zeitplan löschen",
+    "All Days (24h)": "Alle Tage (24 h)",
+    "Individual Days (7-day)": "Einzelne Tage (7 Tage)",
+    "Weekday/Weekend (5/2)": "Werktage/Wochenende (5/2)",
+    "Current Temp:": "Raumtemperatur:",
+    "Target Temp:": "Zieltemperatur:",
+    "Scheduled Temp:": "Laut Zeitplan:",
+    "HVAC Mode:": "Betriebsart:",
+    "Fan Mode:": "Lüftermodus:",
+    "Swing Mode:": "Schwenkmodus:",
+    "Preset Mode:": "Voreinstellung:",
+    "Scheduled": "Laut Zeitplan",
+    "Actions": "Aktionen",
+    "24hr": "24 h",
+    "7 Day": "7 Tage",
+    "Delete Node": "Schaltpunkt löschen",
+    "Test Event": "Ereignis testen",
+    "Previous node": "Vorheriger Schaltpunkt",
+    "Next node": "Nächster Schaltpunkt",
+    "Delete selected node": "Ausgewählten Schaltpunkt löschen",
+    "Choose Profile to Edit": "Profil zum Bearbeiten auswählen",
+    "Enable schedule": "Zeitplan aktivieren",
+    "Rename group": "Gruppe umbenennen",
+    "Move to another group": "In andere Gruppe verschieben",
+    "Remove from group": "Aus Gruppe entfernen",
+    "Heat": "Heizen",
+    "Cool": "Kühlen",
+    "Heat cool": "Heizen/Kühlen",
+    "Off": "Aus",
+    "Auto": "Automatisch",
+    "Dry": "Entfeuchten",
+    "Fan only": "Nur Lüften",
+    "Low": "Niedrig",
+    "Medium": "Mittel",
+    "High": "Hoch",
+    "Duration (hours):": "Dauer (Stunden):",
+    "Slots:": "Zeitabschnitte:",
+    "Min Value:": "Mindestwert:",
+    "Max Value:": "Höchstwert:",
+    "X Axis Label:": "Beschriftung der X-Achse:",
+    "Y Axis Label:": "Beschriftung der Y-Achse:",
+    "Are you sure you want to clear the entire schedule for": "Gesamten Zeitplan löschen für",
+    "Add": "Gerät",
+    "to group:": "zu folgender Gruppe hinzufügen:",
+    "or": "oder",
+    "Convert All Schedules": "Alle Zeitpläne umrechnen",
+    "This will convert all saved schedules (entities and groups) as well as the default schedule and min/max settings.": "Alle gespeicherten Zeitpläne (Geräte und Gruppen), der Standardzeitplan und die Temperaturgrenzen werden umgerechnet.",
+    "Current unit (convert FROM):": "Aktuelle Einheit (von):",
+    "Target unit (convert TO):": "Neue Einheit (nach):",
+    "Warning:": "Achtung:",
+    "This action cannot be undone. Make sure you select the correct source and target units.": "Diese Aktion kann nicht rückgängig gemacht werden. Bitte Ausgangs- und Zieleinheit sorgfältig prüfen.",
+    "Convert Schedules": "Zeitpläne umrechnen",
+    "Double-click or double-tap": "Doppelklicken oder doppelt antippen:",
+    "the line to add a new node": "Auf der Linie einen neuen Schaltpunkt hinzufügen",
+    "Drag nodes": "Schaltpunkte ziehen:",
+    "vertically to change temperature or horizontally to move their time": "Vertikal die Temperatur, horizontal die Uhrzeit ändern",
+    "Drag the horizontal segment": "Waagerechten Abschnitt ziehen:",
+    "between two nodes to shift that period while preserving its duration": "Den Zeitraum zwischen zwei Schaltpunkten verschieben; die Dauer bleibt erhalten",
+    "Copy / Paste": "Kopieren / Einfügen:",
+    "buttons duplicate a schedule across days or entities": "Zeitpläne auf andere Tage oder Geräte übertragen",
+    "Tap a node": "Schaltpunkt antippen:",
+    "to open its settings panel for HVAC/fan/swing/preset values": "Einstellungen für Betriebsart, Lüfter, Schwenkmodus und Voreinstellung öffnen",
+    "Group Management": "Gruppenverwaltung",
+    "+ Create New Group": "+ Neue Gruppe erstellen",
+    "Default Schedule": "Standardzeitplan",
+    "Set the default temperature schedule used when clearing or creating new schedules": "Temperaturverlauf für neue oder zurückgesetzte Zeitpläne festlegen",
+    "Time:": "Uhrzeit:",
+    "Temperature:": "Temperatur:",
+    "Graph Options": "Diagrammoptionen",
+    "Tooltip Display:": "Tooltip-Anzeige:",
+    "Show Historical Temperature": "Temperaturverlauf anzeigen",
+    "Show Cursor Position": "Zeigerposition anzeigen",
+    "Choose what information to display when hovering over the graph": "Informationen auswählen, die beim Bewegen des Mauszeigers über das Diagramm angezeigt werden",
+    "Min Temp (": "Mindesttemperatur (",
+    "Max Temp (": "Höchsttemperatur (",
+    "Temperature Precision": "Temperaturgenauigkeit",
+    "Graph Snap Step:": "Raster im Diagramm:",
+    "Temperature rounding when dragging nodes on the graph": "Temperaturschritte beim Ziehen von Schaltpunkten im Diagramm",
+    "Input Field Step:": "Schrittweite der Eingabe:",
+    "Step size for temperature input fields and up/down buttons": "Schrittweite für Temperaturfelder und Plus-/Minus-Schaltflächen",
+    "Humidity Slider Step:": "Schrittweite der Luftfeuchtigkeit:",
+    "Step size for humidity slider in node settings dialog": "Schrittweite des Luftfeuchtigkeitsreglers in den Schaltpunkt-Einstellungen",
+    "Derivative Sensors": "Änderungsratensensoren",
+    "Automatically create sensors to track heating/cooling rates for performance analysis": "Sensoren zur Analyse der Heiz- und Kühlgeschwindigkeit automatisch erstellen",
+    "When enabled, creates sensor.climate_scheduler_[name]_rate for each thermostat to track temperature change rate (°C/h)": "Erstellt für jedes Thermostat einen Sensor sensor.climate_scheduler_[name]_rate zur Messung der Temperaturänderung (°C/h)",
+    "Workday Integration": "Arbeitstag-Integration",
+    "Configure which days are workdays for 5/2 mode scheduling": "Arbeitstage für die Zeitplanung im 5/2-Modus festlegen",
+    "Use Workday integration for 5/2 scheduling": "Arbeitstag-Integration für den 5/2-Modus verwenden",
+    "Checking if Workday integration is installed...": "Arbeitstag-Integration wird gesucht …",
+    "Select Workdays:": "Arbeitstage auswählen:",
+    "Choose which days are considered workdays when Workday integration is disabled": "Arbeitstage auswählen, wenn die Arbeitstag-Integration deaktiviert ist",
+    "Refresh Entities": "Geräte aktualisieren",
+    "Sync All Thermostats": "Alle Thermostate synchronisieren",
+    "Reload Integration": "Integration neu laden",
+    "Convert All Schedules...": "Alle Zeitpläne umrechnen …",
+    "Run Diagnostics": "Diagnose ausführen",
+    "Cleanup Derivative Sensors": "Änderungsratensensoren bereinigen",
+    "Cleanup Orphaned Entities": "Verwaiste Entitäten bereinigen",
+    "Cleanup Unmonitored Storage": "Einträge ohne Zeitsteuerung bereinigen",
+    "Reset to Defaults": "Auf Standardwerte zurücksetzen",
+    "Debug Console": "Diagnosekonsole",
+    ", created by": ", entwickelt von",
+    "☕ Buy me a coffee": "☕ Einen Kaffee spendieren",
+    "e.g., Bedrooms": "z. B. Schlafzimmer",
+    "Create new group...": "Neue Gruppe erstellen …",
+    "Group name": "Gruppenname",
+    "Waiting for Home Assistant connection...": "Verbindung zu Home Assistant wird hergestellt …",
+    "❌ Climate Scheduler Integration Not Found": "❌ Climate-Scheduler-Integration nicht gefunden",
+    "This card requires the Climate Scheduler integration to be installed.": "Für diese Karte muss die Climate-Scheduler-Integration installiert sein.",
+    "No climate entity data": "Keine Klimagerätedaten vorhanden",
+    "Temperature Range": "Temperaturbereich",
+    "Time Slots:": "Zeitabschnitte:",
+    "Prev Day End:": "Endwert des Vortags:",
+    "Snap Value:": "Rasterschritt:",
+    "None": "Keine",
+    "e.g. Time": "z. B. Uhrzeit",
+    "e.g. Value": "z. B. Temperatur",
+    "❌ Connection Failed": "❌ Verbindung fehlgeschlagen",
+    "Could not connect to Home Assistant": "Verbindung zu Home Assistant konnte nicht hergestellt werden",
+    "Technical Details": "Technische Details",
+    "Troubleshooting:": "Fehlerbehebung:",
+    "No groups created yet": "Noch keine Gruppen erstellt",
+    "No unmonitored entities": "Keine Geräte ohne Zeitplan",
+    "Select a group...": "Gruppe auswählen …",
+    "Install Workday integration": "Arbeitstag-Integration installieren",
+    "Undo last change (Ctrl+Z)": "Letzte Änderung rückgängig machen (Strg+Z)",
+    "Copy current schedule": "Aktuellen Zeitplan kopieren",
+    "Paste copied schedule": "Kopierten Zeitplan einfügen",
+    "Clear advance history markers": "Markierungen vorgezogener Schaltpunkte löschen",
+    "Test fire event with current active node": "Testereignis für den aktiven Schaltpunkt auslösen",
+    "Failed to show group selection modal": "Gruppenauswahl konnte nicht geöffnet werden",
+    "Failed to switch profile": "Profil konnte nicht gewechselt werden",
+    "Failed to load canvas graph component": "Diagramm konnte nicht geladen werden",
+    "Returned to active profile": "Aktives Profil wieder geöffnet",
+    "Failed to save mode change": "Änderung des Zeitplanmodus konnte nicht gespeichert werden",
+    "Selected profile is unavailable for the target schedule": "Das ausgewählte Profil ist für diesen Zeitplan nicht verfügbar",
+    "Select a monitored schedule first": "Bitte zuerst einen Zeitplan mit aktiver Zeitsteuerung auswählen",
+    "Dismiss this notice": "Hinweis schließen",
+    "Virtual Schedule (No Entities) - Events Only": "Virtueller Zeitplan (ohne Geräte) – nur Ereignisse",
+    "Entity enabled": "Gerät aktiviert",
+    "Entity ignored": "Zeitsteuerung für das Gerät deaktiviert",
+    "Cancel Advance": "Vorziehen aufheben",
+    "Cancel advance override for all entities in group": "Vorziehen für alle Geräte der Gruppe aufheben",
+    "Advance all entities in group to next scheduled node": "Alle Geräte der Gruppe zum nächsten Schaltpunkt vorziehen",
+    "Advance canceled for all entities in group": "Vorziehen für alle Geräte der Gruppe aufgehoben",
+    "Advanced all entities in group to next scheduled node": "Alle Geräte der Gruppe zum nächsten Schaltpunkt vorgezogen",
+    "Advance history cleared for all entities in group": "Verlauf vorgezogener Schaltpunkte für alle Geräte der Gruppe gelöscht",
+    "Saved!": "Gespeichert!",
+    "Copied!": "Kopiert!",
+    "Pasted!": "Eingefügt!",
+    "Schedule cleared": "Zeitplan gelöscht",
+    "Failed to clear schedule. Please try again.": "Zeitplan konnte nicht gelöscht werden. Bitte erneut versuchen.",
+    "Failed to clear group schedule. Please try again.": "Gruppenzeitplan konnte nicht gelöscht werden. Bitte erneut versuchen.",
+    "Schedule saved, but failed to update enabled state.": "Zeitplan gespeichert, aber der Aktivierungsstatus konnte nicht aktualisiert werden.",
+    "Failed to save schedule. Check browser console for details.": "Zeitplan konnte nicht gespeichert werden. Details stehen in der Browserkonsole.",
+    "Integration reloaded successfully": "Integration erfolgreich neu geladen",
+    "A group with this name already exists. Please select it from the dropdown or use a different name.": "Eine Gruppe mit diesem Namen existiert bereits. Bitte auswählen oder einen anderen Namen verwenden.",
+    "Please select the current temperature unit (FROM)": "Bitte die aktuelle Temperatureinheit auswählen (von)",
+    "Please select the target temperature unit (TO)": "Bitte die neue Temperatureinheit auswählen (nach)",
+    "Converting...": "Wird umgerechnet …",
+    "23:59 (in use)": "23:59 (belegt)",
+    "⟲ Syncing...": "⟲ Wird synchronisiert …",
+    "✓ Synced!": "✓ Synchronisiert!",
+    "⟲ Sync All Thermostats": "⟲ Alle Thermostate synchronisieren",
+    "When enabled, uses the Workday integration for accurate 5/2 scheduling (respects holidays and custom workdays). When disabled, uses the selected workdays below.": "Verwendet die Arbeitstag-Integration für den 5/2-Modus und berücksichtigt Feiertage sowie individuelle Arbeitstage. Andernfalls gelten die unten ausgewählten Arbeitstage.",
+    "Could not determine if Workday integration is installed.": "Die Verfügbarkeit der Arbeitstag-Integration konnte nicht ermittelt werden.",
+    "✓ Reset!": "✓ Zurückgesetzt!",
+    "✓ Cleared!": "✓ Gelöscht!",
+    "🔍 Running diagnostics...": "🔍 Diagnose läuft …",
+    "✓ Diagnostics Complete!": "✓ Diagnose abgeschlossen!",
+    "🧹 Cleaning up...": "🧹 Wird bereinigt …",
+    "✓ Cleanup Complete!": "✓ Bereinigung abgeschlossen!",
+    "🧹 Cleanup Derivative Sensors": "🧹 Änderungsratensensoren bereinigen",
+    "Failed to cleanup derivative sensors": "Änderungsratensensoren konnten nicht bereinigt werden",
+    "🔍 Scanning...": "🔍 Wird durchsucht …",
+    "No orphaned entities found": "Keine verwaisten Entitäten gefunden",
+    "🗑️ Deleting...": "🗑️ Wird gelöscht …",
+    "No entities were removed": "Es wurden keine Entitäten entfernt",
+    "Failed to cleanup orphaned entities": "Verwaiste Entitäten konnten nicht bereinigt werden",
+    "🔍 Dry run...": "🔍 Vorschau wird erstellt …",
+    "Dry run complete: no stale storage entries to remove.": "Vorschau abgeschlossen: Keine veralteten Speichereinträge gefunden.",
+    "🧹 Cleaning storage...": "🧹 Speicher wird bereinigt …",
+    "Storage cleanup complete": "Speicherbereinigung abgeschlossen",
+    "Failed to cleanup storage": "Speicher konnte nicht bereinigt werden",
+    "Clear all nodes": "Alle Schaltpunkte löschen",
+    "Close profile editor": "Profileditor schließen",
+    "Schedule": "Zeitplan",
+    "Click to collapse": "Zum Einklappen klicken",
+    "▼ Expand": "▼ Aufklappen",
+    "▲ Collapse": "▲ Einklappen",
+    "Hide Config": "Konfiguration ausblenden",
+    "Show Config": "Konfiguration anzeigen",
+    "↶ Undo": "↶ Rückgängig",
+    "Double-click to add • Drag to move • Right-click/hold to delete": "Doppelklicken zum Hinzufügen • Ziehen zum Verschieben • Rechtsklicken oder gedrückt halten zum Löschen",
+    "keyframes": "Schaltpunkte",
+    "Workday integration not detected. Configure workdays manually below.": "Arbeitstag-Integration nicht gefunden. Bitte die Arbeitstage unten manuell festlegen.",
+    "• Try refreshing the page (pull down on mobile)": "• Seite neu laden (auf Mobilgeräten nach unten ziehen)",
+    "• Check if you're logged into Home Assistant": "• Anmeldung bei Home Assistant prüfen",
+    "• Restart the Home Assistant app": "• Home-Assistant-App neu starten",
+    "• Check Settings → Companion App → Debugging": "• Einstellungen → Companion App → Fehlerbehebung prüfen",
+    "Make sure the Climate Scheduler integration is installed and the frontend is available at /climate_scheduler/static": "Bitte prüfen, ob die Climate-Scheduler-Integration installiert und die Oberfläche unter /climate_scheduler/static erreichbar ist",
+    "Failed to load panel module:": "Panel konnte nicht geladen werden:",
+    "Home": "Zuhause",
+    "Away": "Abwesend",
+    "Sleep": "Schlafen",
+    "Comfort": "Komfort",
+    "Eco": "Energiesparen",
+    "Boost": "Schnellheizen",
+    "Heat Cool": "Heizen/Kühlen",
+    "Fan Only": "Nur Lüften",
+    "On": "Ein",
+    "Idle": "Inaktiv",
+    "Heating": "Heizen",
+    "Cooling": "Kühlen",
+    "Switched {0} to profile: {1}": "„{0}“ auf Profil „{1}“ umgestellt",
+    "Enabled scheduling for {0}": "Zeitplanung für „{0}“ aktiviert",
+    "Disabled scheduling for {0}": "Zeitplanung für „{0}“ deaktiviert",
+    "Created profile: {0}": "Profil erstellt: {0}",
+    "Renamed profile to: {0}": "Profil umbenannt in: {0}",
+    "Deleted profile: {0}": "Profil gelöscht: {0}",
+    "Failed to enable entity": "Gerät konnte nicht aktiviert werden",
+    "Failed to disable entity": "Gerät konnte nicht deaktiviert werden",
+    "Removed {0} from {1}": "„{0}“ aus „{1}“ entfernt",
+    "{0} is now unmonitored": "Zeitsteuerung für „{0}“ deaktiviert",
+    "Test event fired for node at {0}": "Testereignis für den Schaltpunkt um {0} ausgelöst",
+    "Cleared schedule for group \"{0}\"": "Zeitplan der Gruppe „{0}“ gelöscht",
+    "Moved entity from {0} to {1}": "Gerät von „{0}“ nach „{1}“ verschoben",
+    "Added entity to {0}": "Gerät zu „{0}“ hinzugefügt",
+    "Cannot convert from {0} to {1} - they are the same unit": "Umrechnung von {0} nach {1} nicht möglich: Die Einheiten sind gleich",
+    "Successfully converted all schedules to {0}. Reloading...": "Alle Zeitpläne erfolgreich in {0} umgerechnet. Wird neu geladen …",
+    "Renamed group to: {0}": "Gruppe umbenannt in: {0}",
+    "Deleted group: {0}": "Gruppe gelöscht: {0}",
+    "Graph snap step set to {0}°": "Diagrammraster auf {0}° eingestellt",
+    "Input field step set to {0}°": "Eingabeschrittweite auf {0}° eingestellt",
+    "Humidity slider step set to {0}%": "Schrittweite der Luftfeuchtigkeit auf {0}% eingestellt",
+    "Diagnostics saved to {0}": "Diagnose gespeichert unter {0}",
+    "Deleted {0} sensors with {1} errors": "{0} Sensoren gelöscht; {1} Fehler aufgetreten",
+    "Removed {0} orphaned entities": "{0} verwaiste Entitäten entfernt",
+    "Dry-run preview saved to {0}": "Bereinigungsvorschau gespeichert unter {0}",
+    "Cleanup result saved to {0}": "Bereinigungsergebnis gespeichert unter {0}",
+    "Editing Profile: {0}": "Profil bearbeiten: {0}",
+    "Member Entities ({0})": "Zugeordnete Geräte ({0})",
+    "{0} (in use)": "{0} (belegt)",
+    "Timeline Editor ({0}h • {1} slots @ {2}min)": "Zeitplaneditor ({0} h • {1} Abschnitte à {2} min)",
+    "Entity {0}": "Gerät {0}",
+    "{0} groups": "{0} Gruppen",
+    "{0} entity references": "{0} Geräteverweise",
+    "{0} profiles": "{0} Profile",
+    "{0} advance-history entries": "{0} Verlaufseinträge vorgezogener Schaltpunkte",
+    "Failed to monitor entity: {0}": "Zeitsteuerung konnte nicht aktiviert werden: {0}",
+    "Failed to update enabled state: {0}": "Aktivierungsstatus konnte nicht aktualisiert werden: {0}",
+    "Failed to load profile: {0}": "Profil konnte nicht geladen werden: {0}",
+    "Failed to create profile: {0}": "Profil konnte nicht erstellt werden: {0}",
+    "Failed to rename profile: {0}": "Profil konnte nicht umbenannt werden: {0}",
+    "Failed to delete profile: {0}": "Profil konnte nicht gelöscht werden: {0}",
+    "Failed to remove entity from group: {0}": "Gerät konnte nicht aus der Gruppe entfernt werden: {0}",
+    "Failed to unmonitor entity: {0}": "Zeitsteuerung konnte nicht deaktiviert werden: {0}",
+    "Failed: {0}": "Fehlgeschlagen: {0}",
+    "Failed to fire test event: {0}": "Testereignis konnte nicht ausgelöst werden: {0}",
+    "Failed to reload integration: {0}": "Integration konnte nicht neu geladen werden: {0}",
+    "Failed to convert schedules: {0}": "Zeitpläne konnten nicht umgerechnet werden: {0}",
+    "Failed to rename group: {0}": "Gruppe konnte nicht umbenannt werden: {0}",
+    "Failed to delete group: {0}": "Gruppe konnte nicht gelöscht werden: {0}",
+    "Failed to sync temperatures: {0}": "Temperaturen konnten nicht synchronisiert werden: {0}",
+    "Failed to run diagnostics: {0}": "Diagnose konnte nicht ausgeführt werden: {0}",
+    "⚠️ Preset-Only Devices Detected": "⚠️ Geräte ohne Temperatursensor erkannt",
+    "{0} devices in this group have no temperature sensor and will only receive mode changes (HVAC, fan, swing, preset).": "{0} Geräte dieser Gruppe haben keinen Temperatursensor. Sie erhalten nur Änderungen der Betriebsart, des Lüfter- oder Schwenkmodus und der Voreinstellung.",
+    "Auto-creation of derivative sensors is disabled.\n\nThis will DELETE ALL climate_scheduler derivative sensors.\n\nAre you sure you want to continue?": "Die automatische Erstellung von Änderungsratensensoren ist deaktiviert.\n\nALLE Änderungsratensensoren von Climate Scheduler werden GELÖSCHT.\n\nWirklich fortfahren?",
+    "This will remove derivative sensors for thermostats that no longer exist.\n\nContinue?": "Änderungsratensensoren nicht mehr vorhandener Thermostate werden entfernt.\n\nFortfahren?",
+    "Found {0} orphaned entities:\n\n• {1}\n\nThese entities no longer have matching groups or climate entities in storage.\n\nDelete these entities?": "{0} verwaiste Entitäten gefunden:\n\n• {1}\n\nDiesen Entitäten sind keine gespeicherten Gruppen oder Klimageräte mehr zugeordnet.\n\nDiese Entitäten löschen?",
+    "Dry run found changes:": "Die Vorschau hat Änderungen gefunden:",
+    "Will remove: {0}.": "Wird entfernt: {0}.",
+    "Groups: {0}": "Gruppen: {0}",
+    "Proceed with cleanup?": "Mit der Bereinigung fortfahren?",
+    "Show Debug Panel": "Diagnosekonsole anzeigen",
+    "Auto-create derivative sensors": "Änderungsratensensoren automatisch erstellen",
+    "Install it from HACS or visit:": "Über HACS installieren oder folgende Seite besuchen:",
+    "Climate Scheduler Card": "Climate-Scheduler-Karte",
+    "Full Climate Scheduler UI as a Lovelace card": "Vollständige Climate-Scheduler-Oberfläche als Lovelace-Karte",
+    "Climate Scheduler has been updated. Please refresh your browser (Ctrl+F5 or Cmd+Shift+R) to load the new version.": "Climate Scheduler wurde aktualisiert. Bitte den Browser mit Strg+F5 oder Cmd+Umschalt+R neu laden.",
+    "Integration frontend not found at /climate_scheduler/static": "Integrationsoberfläche unter /climate_scheduler/static nicht gefunden",
+    "No authentication token found. Please ensure the panel is loaded within Home Assistant.": "Kein Anmeldetoken gefunden. Bitte das Panel innerhalb von Home Assistant öffnen.",
+    "WebSocket not connected": "Keine WebSocket-Verbindung",
+    "Failed to load panel module: {0}": "Panel konnte nicht geladen werden: {0}",
+    "Unknown": "Unbekannt",
+    "Unavailable": "Nicht verfügbar",
+    "Horizontal": "Horizontal",
+    "Vertical": "Vertikal",
+    "Both": "Beide",
+    "Quiet": "Leise",
+    "Turbo": "Turbo",
+    "Middle": "Mitte",
+    "Top": "Oben",
+    "Bottom": "Unten",
+    "Left": "Links",
+    "Right": "Rechts",
+    "e.g. 5.0": "z. B. 5,0",
+    "e.g. 30.0": "z. B. 30,0",
+    "(manual)": "(manuell)",
+    "Debug panel restored from saved state": "Gespeicherten Zustand der Diagnosekonsole wiederhergestellt",
+    "Log level set to debug (check Home Assistant logs)": "Protokollstufe auf Debug gesetzt (siehe Home-Assistant-Protokolle)",
+    "Debug panel enabled": "Diagnosekonsole aktiviert",
+    "Frontend operations will be logged here. Backend logs are in Home Assistant system log.": "Oberflächenaktionen werden hier protokolliert. Backend-Protokolle stehen im Systemprotokoll von Home Assistant.",
+    "Debug panel disabled": "Diagnosekonsole deaktiviert",
+    "Log level reset to info": "Protokollstufe auf Info zurückgesetzt",
+    "Debug console cleared": "Diagnosekonsole geleert",
+    "Failed to set log level: {0}": "Protokollstufe konnte nicht gesetzt werden: {0}",
+    "Failed to reset log level: {0}": "Protokollstufe konnte nicht zurückgesetzt werden: {0}",
+    "Server timezone: {0}": "Server-Zeitzone: {0}",
+    "Deleted {0} sensor entities. Integration reloaded.": "{0} Sensorentitäten gelöscht. Integration neu geladen.",
+    "Deleted {0} sensor entities. Integration reloaded. Errors: {1}.": "{0} Sensorentitäten gelöscht. Integration neu geladen. Fehler: {1}."
+};
+const messageTemplates = Object.entries(de)
+    .filter(([key]) => key.includes('{0}'))
+    .map(([key, translated]) => ({
+    pattern: new RegExp('^' + key.split(/\{\d+\}/).map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('(.*?)') + '$', 's'),
+    translated,
+}));
+function getLanguage() {
+    const panel = typeof window !== 'undefined' ? window.climateSchedulerPanelRoot : null;
+    const language = panel?.hass?.locale?.language || panel?.hass?.language;
+    return language || (typeof document !== 'undefined' ? document.documentElement.lang : '') || 'en';
+}
+function t$3(message, language = getLanguage()) {
+    if (!language.toLowerCase().startsWith('de'))
+        return message;
+    if (Object.prototype.hasOwnProperty.call(de, message))
+        return de[message];
+    for (const { pattern, translated } of messageTemplates) {
+        const match = message.match(pattern);
+        if (match)
+            return translated.replace(/\{(\d+)\}/g, (_, index) => match[Number(index) + 1]);
+    }
+    // Match whole UI messages; captured names remain exactly as entered by the user.
+    const patterns = [
+        [/^Start monitoring (.*?)\?\n\nThis entity will be managed by the scheduler again\.$/s, name => `Zeitsteuerung für „${name}“ aktivieren?\n\nDieses Gerät wird wieder vom Zeitplan gesteuert.`],
+        [/^Stop monitoring (.*?)\?\n\nUnmonitored entities will not be managed by the scheduler\.$/s, name => `Zeitsteuerung für „${name}“ deaktivieren?\n\nDieses Gerät wird nicht mehr vom Zeitplan gesteuert.`],
+        [/^Delete profile "(.*?)"\?$/s, name => `Profil „${name}“ löschen?`],
+        [/^Rename profile "(.*?)" to:$/s, name => `Neuer Name für das Profil „${name}“:`],
+        [/^Clear schedule for group "(.*?)"\?$/s, name => `Zeitplan der Gruppe „${name}“ löschen?`],
+        [/^Delete group "(.*?)"\? All entities will be moved back to the entity list\.$/s, name => `Gruppe „${name}“ löschen? Alle Geräte werden zurück in die Geräteliste verschoben.`],
+        [/^Remove "(.*?)" from group "(.*?)"\?\n\nThe entity will return to your active entities list\.$/s, (name, group) => `„${name}“ aus der Gruppe „${group}“ entfernen?\n\nDas Gerät wird wieder in der Liste aktiver Geräte angezeigt.`],
+        [/^(.*?) is now monitored\.$/s, name => `Zeitsteuerung für „${name}“ aktiviert.`],
+        [/^Schedule \((All Days|Weekday|Weekend|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\)$/s, day => `Zeitplan (${de[day] || day})`],
+    ];
+    for (const [pattern, translate] of patterns) {
+        const match = message.match(pattern);
+        if (match)
+            return translate(...match.slice(1));
+    }
+    return message;
+}
+
 /**
  * @license
  * Copyright 2019 Google LLC
@@ -98,7 +574,7 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
     }
     render() {
         if (!this.stateObj) {
-            return b `<div>No climate entity data</div>`;
+            return b `<div>${t$3("No climate entity data")}</div>`;
         }
         return b `
       ${this._renderModeRow()}
@@ -127,16 +603,16 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
             return '';
         return b `
       <div class="section">
-        <div class="section-title">HVAC Mode</div>
+        <div class="section-title">${t$3("HVAC Mode")}</div>
         <select 
           class="mode-select"
           .value=${this.stateObj.state || ''}
           @change=${this._handleHvacModeChange}
         >
-          <option value="">-- No Change --</option>
+          <option value="">${t$3("-- No Change --")}</option>
           ${this.stateObj.attributes.hvac_modes.map(mode => b `
             <option value="${mode}" ?selected=${this.stateObj.state === mode}>
-              ${this._capitalize(mode)}
+              ${t$3(this._capitalize(mode))}
             </option>
           `)}
         </select>
@@ -157,32 +633,32 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
         // Determine class, track fill, and label based on current mode
         let inputClass = '';
         let trackFill = tempPercent;
-        let label = 'Set to';
+        let label = t$3('Set to');
         if (currentMode === 'heat_cool') {
             inputClass = 'heat-cool';
         }
         else if (currentMode === 'cool') {
             inputClass = 'cooling';
             trackFill = 100 - tempPercent;
-            label = 'Cool to';
+            label = t$3('Cool to');
         }
         else if (currentMode === 'heat') {
             inputClass = 'heating';
-            label = 'Heat to';
+            label = t$3('Heat to');
         }
         return b `
       <div class="section">
-        <div class="section-title">Target Temperature</div>
+        <div class="section-title">${t$3("Target Temperature")}</div>
         <div class="temp-range-control">
           <div class="temp-range-labels" style="justify-content: center;">
             <div class="temp-range-value">
-              <span class="temp-range-label">${label}</span>
+              <span class="temp-range-label">${t$3(label)}</span>
               <span class="temp-range-number">${temperature}°</span>
             </div>
           </div>
           <div class="dual-range-container">
             <input 
-              type="range" 
+              type="range" aria-label="${t$3("Target Temperature")}"
               class="dual-range-input ${inputClass}"
               min="${min_temp}"
               max="${max_temp}"
@@ -218,17 +694,17 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
         if (heatOnly) {
             return b `
         <div class="section">
-          <div class="section-title">Target Temperature</div>
+          <div class="section-title">${t$3("Target Temperature")}</div>
           <div class="temp-range-control">
             <div class="temp-range-labels" style="justify-content: center;">
               <div class="temp-range-value">
-                <span class="temp-range-label">Heat to</span>
+                <span class="temp-range-label">${t$3("Heat to")}</span>
                 <span class="temp-range-number">${target_temp_low}°</span>
               </div>
             </div>
             <div class="dual-range-container">
               <input 
-                type="range" 
+                type="range" aria-label="${t$3("Heat to")}"
                 class="dual-range-input heating"
                 min="${min_temp}"
                 max="${max_temp}"
@@ -248,17 +724,17 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
         if (coolOnly) {
             return b `
         <div class="section">
-          <div class="section-title">Target Temperature</div>
+          <div class="section-title">${t$3("Target Temperature")}</div>
           <div class="temp-range-control">
             <div class="temp-range-labels" style="justify-content: center;">
               <div class="temp-range-value">
-                <span class="temp-range-label">Cool to</span>
+                <span class="temp-range-label">${t$3("Cool to")}</span>
                 <span class="temp-range-number">${target_temp_high}°</span>
               </div>
             </div>
             <div class="dual-range-container">
               <input 
-                type="range" 
+                type="range" aria-label="${t$3("Cool to")}"
                 class="dual-range-input cooling"
                 min="${min_temp}"
                 max="${max_temp}"
@@ -277,15 +753,15 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
         // Render dual range (both heat and cool, heat_cool, auto, or off)
         return b `
       <div class="section">
-        <div class="section-title">Temperature Range</div>
+        <div class="section-title">${t$3("Temperature Range")}</div>
         <div class="temp-range-control">
           <div class="temp-range-labels">
             <div class="temp-range-value">
-              <span class="temp-range-label">Heat to</span>
+              <span class="temp-range-label">${t$3("Heat to")}</span>
               <span class="temp-range-number">${target_temp_low}°</span>
             </div>
             <div class="temp-range-value">
-              <span class="temp-range-label">Cool to</span>
+              <span class="temp-range-label">${t$3("Cool to")}</span>
               <span class="temp-range-number">${target_temp_high}°</span>
             </div>
           </div>
@@ -296,7 +772,7 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
               </div>
             ` : ''}
             <input 
-              type="range" 
+              type="range" aria-label="${t$3("Heat to")}"
               class="dual-range-input ${!isOffOrAuto ? 'heating' : ''}"
               min="${min_temp}"
               max="${max_temp}"
@@ -308,7 +784,7 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
               style="top: 0; --track-fill: ${lowPercent}%;"
             />
             <input 
-              type="range" 
+              type="range" aria-label="${t$3("Cool to")}"
               class="dual-range-input ${!isOffOrAuto ? 'cooling' : ''}"
               min="${min_temp}"
               max="${max_temp}"
@@ -334,17 +810,17 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
         const humidityPercent = ((target_humidity - min_humidity) / range) * 100;
         return b `
       <div class="section">
-        <div class="section-title">Target Humidity</div>
+        <div class="section-title">${t$3("Target Humidity")}</div>
         <div class="temp-range-control">
           <div class="temp-range-labels" style="justify-content: center;">
             <div class="temp-range-value">
-              <span class="temp-range-label">Set to</span>
+              <span class="temp-range-label">${t$3("Set to")}</span>
               <span class="temp-range-number">${target_humidity}%</span>
             </div>
           </div>
           <div class="dual-range-container">
             <input 
-              type="range" 
+              type="range" aria-label="${t$3("Target Humidity")}"
               class="dual-range-input"
               min="${min_humidity}"
               max="${max_humidity}"
@@ -391,16 +867,16 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
             return '';
         return b `
       <div class="section">
-        <div class="section-title">Fan Mode</div>
+        <div class="section-title">${t$3("Fan Mode")}</div>
         <select 
           class="mode-select"
           .value=${this.stateObj.attributes.fan_mode || ''}
           @change=${this._handleFanModeChange}
         >
-          <option value="">-- No Change --</option>
+          <option value="">${t$3("-- No Change --")}</option>
           ${this.stateObj.attributes.fan_modes.map(mode => b `
             <option value="${mode}" ?selected=${this.stateObj.attributes.fan_mode === mode}>
-              ${this._capitalize(mode)}
+              ${t$3(this._capitalize(mode))}
             </option>
           `)}
         </select>
@@ -412,16 +888,16 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
             return '';
         return b `
       <div class="section">
-        <div class="section-title">Thermostat Preset</div>
+        <div class="section-title">${t$3("Thermostat Preset")}</div>
         <select 
           class="mode-select"
           .value=${this.stateObj.attributes.preset_mode || ''}
           @change=${this._handlePresetModeChange}
         >
-          <option value="">-- No Change --</option>
+          <option value="">${t$3("-- No Change --")}</option>
           ${this.stateObj.attributes.preset_modes.map(mode => b `
             <option value="${mode}" ?selected=${this.stateObj.attributes.preset_mode === mode}>
-              ${this._capitalize(mode)}
+              ${t$3(this._capitalize(mode))}
             </option>
           `)}
         </select>
@@ -433,16 +909,16 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
             return '';
         return b `
       <div class="section">
-        <div class="section-title">Swing (Vertical)</div>
+        <div class="section-title">${t$3("Swing (Vertical)")}</div>
         <select 
           class="mode-select"
           .value=${this.stateObj.attributes.swing_mode || ''}
           @change=${this._handleSwingModeChange}
         >
-          <option value="">-- No Change --</option>
+          <option value="">${t$3("-- No Change --")}</option>
           ${this.stateObj.attributes.swing_modes.map(mode => b `
             <option value="${mode}" ?selected=${this.stateObj.attributes.swing_mode === mode}>
-              ${this._capitalize(mode)}
+              ${t$3(this._capitalize(mode))}
             </option>
           `)}
         </select>
@@ -454,16 +930,16 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
             return '';
         return b `
       <div class="section">
-        <div class="section-title">Swing (Horizontal)</div>
+        <div class="section-title">${t$3("Swing (Horizontal)")}</div>
         <select 
           class="mode-select"
           .value=${this.stateObj.attributes.swing_horizontal_mode || ''}
           @change=${this._handleSwingHorizontalModeChange}
         >
-          <option value="">-- No Change --</option>
+          <option value="">${t$3("-- No Change --")}</option>
           ${this.stateObj.attributes.swing_horizontal_modes.map(mode => b `
             <option value="${mode}" ?selected=${this.stateObj.attributes.swing_horizontal_mode === mode}>
-              ${this._capitalize(mode)}
+              ${t$3(this._capitalize(mode))}
             </option>
           `)}
         </select>
@@ -476,9 +952,9 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
         }
         return b `
       <div class="section">
-        <div class="section-title">Auxiliary Heat</div>
+        <div class="section-title">${t$3("Auxiliary Heat")}</div>
         <div class="toggle-row">
-          <span class="toggle-label">Aux Heat</span>
+          <span class="toggle-label">${t$3("Aux Heat")}</span>
           <label class="toggle-switch">
             <input 
               type="checkbox" 
@@ -537,7 +1013,7 @@ let ClimateControlDialog = class ClimateControlDialog extends i {
         return b `
       <div class="section">
         <div class="toggle-row">
-          <span class="toggle-label">No Temperature Change</span>
+          <span class="toggle-label">${t$3("No Temperature Change")}</span>
           <label class="toggle-switch">
             <input
               type="checkbox"
@@ -807,8 +1283,40 @@ ClimateControlDialog.styles = i$3 `
 
     .dual-range-container {
       position: relative;
-      margin: 0 0;
+      margin: 14px 10px 8px;
       padding: 0;
+      height: 28px;
+    }
+
+    /* A shared rail stays visible in auto/off and behind both range thumbs. */
+    .dual-range-container::before {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 0;
+      right: 0;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--divider-color, #aebbc5);
+      pointer-events: none;
+    }
+
+    .dual-range-input:only-of-type:not(.heating):not(.cooling):not(.heat-cool)::-webkit-slider-runnable-track {
+      background: linear-gradient(to right, var(--primary-color, #03a9f4) var(--track-fill, 50%), transparent var(--track-fill, 50%));
+    }
+
+    .dual-range-input:only-of-type:not(.heating):not(.cooling):not(.heat-cool)::-moz-range-progress {
+      background: var(--primary-color, #03a9f4);
+      height: 8px;
+      border-radius: 999px;
+    }
+
+    .dual-range-input:disabled { opacity: 0.45; }
+    .dual-range-input:disabled::-webkit-slider-thumb { cursor: not-allowed; }
+    .dual-range-input:disabled::-moz-range-thumb { cursor: not-allowed; }
+    .dual-range-input:focus-visible { outline: none; }
+    .dual-range-input {
+      appearance: none;
     }
 
     .dual-range-input {
@@ -896,7 +1404,7 @@ ClimateControlDialog.styles = i$3 `
 
     /* Heating input - red from left to thumb */
     .dual-range-input.heating::-webkit-slider-runnable-track {
-      background: linear-gradient(to right, 
+      background: linear-gradient(to right,
         #f44336 0%, 
         #f44336 var(--track-fill, 50%), 
         transparent var(--track-fill, 50%));
@@ -920,7 +1428,7 @@ ClimateControlDialog.styles = i$3 `
 
     /* Cooling input - blue from right to thumb */
     .dual-range-input.cooling::-webkit-slider-runnable-track {
-      background: linear-gradient(to left, 
+      background: linear-gradient(to left,
         #2196f3 0%, 
         #2196f3 var(--track-fill, 50%), 
         transparent var(--track-fill, 50%));
@@ -1053,6 +1561,15 @@ ClimateControlDialog.styles = i$3 `
     input:checked + .toggle-slider:before {
       transform: translateX(22px);
     }
+
+    .mode-select { border-radius: 10px; min-height: 42px; }
+    .dialog-header { font-weight: 600; letter-spacing: -0.02em; }
+    .section-title { font-size: 11px; letter-spacing: 0.08em; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--primary-color, #03a9f4);
+      outline-offset: 3px;
+    }
+    @media (max-width: 480px) { .mode-row { flex-wrap: wrap; } .mode-row .section { min-width: 120px; } }
   `;
 __decorate([
     n({ type: Object })

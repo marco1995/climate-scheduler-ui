@@ -27,6 +27,496 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
+/** UI translations. Keep device values, service names and stored profile IDs unchanged. */
+const de = {
+    "HOME CLIMATE": "RAUMKLIMA",
+    "Your rooms. Your rhythm.": "Deine Räume. Dein Rhythmus.",
+    "Monitored": "Mit Zeitplan",
+    "Unmonitored": "Ohne Zeitplan",
+    "Profiles": "Profile",
+    "Monitor": "Zeitsteuerung aktivieren",
+    "Unmonitor": "Zeitsteuerung deaktivieren",
+    "Instructions": "Anleitung",
+    "Settings": "Einstellungen",
+    "Schedule Settings": "Zeitplan-Einstellungen",
+    "Target Temperature": "Zieltemperatur",
+    "Target Humidity": "Zielluftfeuchtigkeit",
+    "Temperature": "Temperatur",
+    "Temperature (°C)": "Temperatur (°C)",
+    "Temperature (°F)": "Temperatur (°F)",
+    "Time of Day (24hr)": "Uhrzeit (24 h)",
+    "Set to": "Einstellen auf",
+    "Heat to": "Heizen auf",
+    "Cool to": "Kühlen auf",
+    "HVAC Mode": "Betriebsart",
+    "Fan Mode": "Lüftermodus",
+    "Thermostat Preset": "Thermostat-Voreinstellung",
+    "Swing (Vertical)": "Schwenken (vertikal)",
+    "Swing (Horizontal)": "Schwenken (horizontal)",
+    "Auxiliary Heat": "Zusatzheizung",
+    "Aux Heat": "Zusatzheizung",
+    "Temperature Change": "Temperaturänderung",
+    "No Temperature Change": "Keine Temperaturänderung",
+    "-- No Change --": "-- Keine Änderung --",
+    "No Change": "Keine Änderung",
+    "Legend": "Legende",
+    "Save": "Speichern",
+    "Cancel": "Abbrechen",
+    "Continue": "Fortfahren",
+    "Confirm action": "Aktion bestätigen",
+    "Please note": "Hinweis",
+    "Enter a name": "Namen eingeben",
+    "Name": "Name",
+    "Done": "Fertig",
+    "Copy": "Kopieren",
+    "Paste": "Einfügen",
+    "Undo": "Rückgängig",
+    "Advance": "Vorziehen",
+    "Clear": "Leeren",
+    "Delete": "Löschen",
+    "Close": "Schließen",
+    "Enabled": "Aktiviert",
+    "Disabled": "Deaktiviert",
+    "Enable": "Aktivieren",
+    "Disable": "Deaktivieren",
+    "All Days": "Alle Tage",
+    "All days": "Alle Tage",
+    "Weekday": "Werktage",
+    "Weekdays": "Werktage",
+    "Weekend": "Wochenende",
+    "Mon": "Mo",
+    "Tue": "Di",
+    "Wed": "Mi",
+    "Thu": "Do",
+    "Fri": "Fr",
+    "Sat": "Sa",
+    "Sun": "So",
+    "Monday": "Montag",
+    "Tuesday": "Dienstag",
+    "Wednesday": "Mittwoch",
+    "Thursday": "Donnerstag",
+    "Friday": "Freitag",
+    "Saturday": "Samstag",
+    "Sunday": "Sonntag",
+    "Schedule (All Days)": "Zeitplan (alle Tage)",
+    "Copy Schedule": "Zeitplan kopieren",
+    "Paste Schedule": "Zeitplan einfügen",
+    "Clear Schedule": "Zeitplan löschen",
+    "Clear Schedule?": "Zeitplan löschen?",
+    "Clear Advance History": "Verlauf vorgezogener Schaltpunkte löschen",
+    "Create New Group": "Neue Gruppe erstellen",
+    "Group Name:": "Gruppenname:",
+    "Create Group": "Gruppe erstellen",
+    "Add to Group": "Zur Gruppe hinzufügen",
+    "Edit Group": "Gruppe bearbeiten",
+    "Delete Group": "Gruppe löschen",
+    "Filter by name...": "Nach Namen filtern …",
+    "Select a profile to edit...": "Profil zum Bearbeiten auswählen …",
+    "Create new profile": "Neues Profil erstellen",
+    "Rename profile": "Profil umbenennen",
+    "Delete profile": "Profil löschen",
+    "Previous keyframe": "Vorheriger Schaltpunkt",
+    "Next keyframe": "Nächster Schaltpunkt",
+    "Click to expand": "Zum Aufklappen klicken",
+    "Current": "Aktuell",
+    "Target": "Ziel",
+    "Status": "Status",
+    "Time": "Uhrzeit",
+    "Node Settings": "Schaltpunkt-Einstellungen",
+    "Schedule copied": "Zeitplan kopiert",
+    "Schedule pasted": "Zeitplan eingefügt",
+    "Profile saved successfully": "Profil erfolgreich gespeichert",
+    "Failed to save profile changes": "Profiländerungen konnten nicht gespeichert werden",
+    "Failed to load climate entities": "Klimageräte konnten nicht geladen werden",
+    "Failed to delete group": "Gruppe konnte nicht gelöscht werden",
+    "Please enter a group name": "Bitte einen Gruppennamen eingeben",
+    "A group with this name already exists": "Eine Gruppe mit diesem Namen existiert bereits",
+    "Failed to create group": "Gruppe konnte nicht erstellt werden",
+    "Please select or create a group": "Bitte eine Gruppe auswählen oder erstellen",
+    "Failed to add entity to group": "Gerät konnte nicht zur Gruppe hinzugefügt werden",
+    "Minimum temperature must be a number": "Die Mindesttemperatur muss eine Zahl sein",
+    "Maximum temperature must be a number": "Die Höchsttemperatur muss eine Zahl sein",
+    "Cannot delete the last node. A schedule must have at least one node.": "Der letzte Schaltpunkt kann nicht gelöscht werden. Ein Zeitplan benötigt mindestens einen Schaltpunkt.",
+    "Delete this node?": "Diesen Schaltpunkt löschen?",
+    "Clear all nodes for this profile?": "Alle Schaltpunkte dieses Profils löschen?",
+    "Enter name for new profile:": "Namen für das neue Profil eingeben:",
+    "Reset to default schedule settings?": "Zeitplan-Einstellungen zurücksetzen?",
+    "Clear the default schedule? All nodes will be removed.": "Standardzeitplan löschen? Alle Schaltpunkte werden entfernt.",
+    "This action cannot be undone.": "Diese Aktion kann nicht rückgängig gemacht werden.",
+    "Schedule mode": "Zeitplanmodus",
+    "Copy schedule": "Zeitplan kopieren",
+    "Paste schedule": "Zeitplan einfügen",
+    "Undo last change": "Letzte Änderung rückgängig machen",
+    "Save schedule": "Zeitplan speichern",
+    "Advance to next scheduled node": "Zum nächsten Schaltpunkt vorziehen",
+    "Stop monitoring this thermostat": "Zeitsteuerung dieses Thermostats deaktivieren",
+    "Clear entire schedule": "Gesamten Zeitplan löschen",
+    "All Days (24h)": "Alle Tage (24 h)",
+    "Individual Days (7-day)": "Einzelne Tage (7 Tage)",
+    "Weekday/Weekend (5/2)": "Werktage/Wochenende (5/2)",
+    "Current Temp:": "Raumtemperatur:",
+    "Target Temp:": "Zieltemperatur:",
+    "Scheduled Temp:": "Laut Zeitplan:",
+    "HVAC Mode:": "Betriebsart:",
+    "Fan Mode:": "Lüftermodus:",
+    "Swing Mode:": "Schwenkmodus:",
+    "Preset Mode:": "Voreinstellung:",
+    "Scheduled": "Laut Zeitplan",
+    "Actions": "Aktionen",
+    "24hr": "24 h",
+    "7 Day": "7 Tage",
+    "Delete Node": "Schaltpunkt löschen",
+    "Test Event": "Ereignis testen",
+    "Previous node": "Vorheriger Schaltpunkt",
+    "Next node": "Nächster Schaltpunkt",
+    "Delete selected node": "Ausgewählten Schaltpunkt löschen",
+    "Choose Profile to Edit": "Profil zum Bearbeiten auswählen",
+    "Enable schedule": "Zeitplan aktivieren",
+    "Rename group": "Gruppe umbenennen",
+    "Move to another group": "In andere Gruppe verschieben",
+    "Remove from group": "Aus Gruppe entfernen",
+    "Heat": "Heizen",
+    "Cool": "Kühlen",
+    "Heat cool": "Heizen/Kühlen",
+    "Off": "Aus",
+    "Auto": "Automatisch",
+    "Dry": "Entfeuchten",
+    "Fan only": "Nur Lüften",
+    "Low": "Niedrig",
+    "Medium": "Mittel",
+    "High": "Hoch",
+    "Duration (hours):": "Dauer (Stunden):",
+    "Slots:": "Zeitabschnitte:",
+    "Min Value:": "Mindestwert:",
+    "Max Value:": "Höchstwert:",
+    "X Axis Label:": "Beschriftung der X-Achse:",
+    "Y Axis Label:": "Beschriftung der Y-Achse:",
+    "Are you sure you want to clear the entire schedule for": "Gesamten Zeitplan löschen für",
+    "Add": "Gerät",
+    "to group:": "zu folgender Gruppe hinzufügen:",
+    "or": "oder",
+    "Convert All Schedules": "Alle Zeitpläne umrechnen",
+    "This will convert all saved schedules (entities and groups) as well as the default schedule and min/max settings.": "Alle gespeicherten Zeitpläne (Geräte und Gruppen), der Standardzeitplan und die Temperaturgrenzen werden umgerechnet.",
+    "Current unit (convert FROM):": "Aktuelle Einheit (von):",
+    "Target unit (convert TO):": "Neue Einheit (nach):",
+    "Warning:": "Achtung:",
+    "This action cannot be undone. Make sure you select the correct source and target units.": "Diese Aktion kann nicht rückgängig gemacht werden. Bitte Ausgangs- und Zieleinheit sorgfältig prüfen.",
+    "Convert Schedules": "Zeitpläne umrechnen",
+    "Double-click or double-tap": "Doppelklicken oder doppelt antippen:",
+    "the line to add a new node": "Auf der Linie einen neuen Schaltpunkt hinzufügen",
+    "Drag nodes": "Schaltpunkte ziehen:",
+    "vertically to change temperature or horizontally to move their time": "Vertikal die Temperatur, horizontal die Uhrzeit ändern",
+    "Drag the horizontal segment": "Waagerechten Abschnitt ziehen:",
+    "between two nodes to shift that period while preserving its duration": "Den Zeitraum zwischen zwei Schaltpunkten verschieben; die Dauer bleibt erhalten",
+    "Copy / Paste": "Kopieren / Einfügen:",
+    "buttons duplicate a schedule across days or entities": "Zeitpläne auf andere Tage oder Geräte übertragen",
+    "Tap a node": "Schaltpunkt antippen:",
+    "to open its settings panel for HVAC/fan/swing/preset values": "Einstellungen für Betriebsart, Lüfter, Schwenkmodus und Voreinstellung öffnen",
+    "Group Management": "Gruppenverwaltung",
+    "+ Create New Group": "+ Neue Gruppe erstellen",
+    "Default Schedule": "Standardzeitplan",
+    "Set the default temperature schedule used when clearing or creating new schedules": "Temperaturverlauf für neue oder zurückgesetzte Zeitpläne festlegen",
+    "Time:": "Uhrzeit:",
+    "Temperature:": "Temperatur:",
+    "Graph Options": "Diagrammoptionen",
+    "Tooltip Display:": "Tooltip-Anzeige:",
+    "Show Historical Temperature": "Temperaturverlauf anzeigen",
+    "Show Cursor Position": "Zeigerposition anzeigen",
+    "Choose what information to display when hovering over the graph": "Informationen auswählen, die beim Bewegen des Mauszeigers über das Diagramm angezeigt werden",
+    "Min Temp (": "Mindesttemperatur (",
+    "Max Temp (": "Höchsttemperatur (",
+    "Temperature Precision": "Temperaturgenauigkeit",
+    "Graph Snap Step:": "Raster im Diagramm:",
+    "Temperature rounding when dragging nodes on the graph": "Temperaturschritte beim Ziehen von Schaltpunkten im Diagramm",
+    "Input Field Step:": "Schrittweite der Eingabe:",
+    "Step size for temperature input fields and up/down buttons": "Schrittweite für Temperaturfelder und Plus-/Minus-Schaltflächen",
+    "Humidity Slider Step:": "Schrittweite der Luftfeuchtigkeit:",
+    "Step size for humidity slider in node settings dialog": "Schrittweite des Luftfeuchtigkeitsreglers in den Schaltpunkt-Einstellungen",
+    "Derivative Sensors": "Änderungsratensensoren",
+    "Automatically create sensors to track heating/cooling rates for performance analysis": "Sensoren zur Analyse der Heiz- und Kühlgeschwindigkeit automatisch erstellen",
+    "When enabled, creates sensor.climate_scheduler_[name]_rate for each thermostat to track temperature change rate (°C/h)": "Erstellt für jedes Thermostat einen Sensor sensor.climate_scheduler_[name]_rate zur Messung der Temperaturänderung (°C/h)",
+    "Workday Integration": "Arbeitstag-Integration",
+    "Configure which days are workdays for 5/2 mode scheduling": "Arbeitstage für die Zeitplanung im 5/2-Modus festlegen",
+    "Use Workday integration for 5/2 scheduling": "Arbeitstag-Integration für den 5/2-Modus verwenden",
+    "Checking if Workday integration is installed...": "Arbeitstag-Integration wird gesucht …",
+    "Select Workdays:": "Arbeitstage auswählen:",
+    "Choose which days are considered workdays when Workday integration is disabled": "Arbeitstage auswählen, wenn die Arbeitstag-Integration deaktiviert ist",
+    "Refresh Entities": "Geräte aktualisieren",
+    "Sync All Thermostats": "Alle Thermostate synchronisieren",
+    "Reload Integration": "Integration neu laden",
+    "Convert All Schedules...": "Alle Zeitpläne umrechnen …",
+    "Run Diagnostics": "Diagnose ausführen",
+    "Cleanup Derivative Sensors": "Änderungsratensensoren bereinigen",
+    "Cleanup Orphaned Entities": "Verwaiste Entitäten bereinigen",
+    "Cleanup Unmonitored Storage": "Einträge ohne Zeitsteuerung bereinigen",
+    "Reset to Defaults": "Auf Standardwerte zurücksetzen",
+    "Debug Console": "Diagnosekonsole",
+    ", created by": ", entwickelt von",
+    "☕ Buy me a coffee": "☕ Einen Kaffee spendieren",
+    "e.g., Bedrooms": "z. B. Schlafzimmer",
+    "Create new group...": "Neue Gruppe erstellen …",
+    "Group name": "Gruppenname",
+    "Waiting for Home Assistant connection...": "Verbindung zu Home Assistant wird hergestellt …",
+    "❌ Climate Scheduler Integration Not Found": "❌ Climate-Scheduler-Integration nicht gefunden",
+    "This card requires the Climate Scheduler integration to be installed.": "Für diese Karte muss die Climate-Scheduler-Integration installiert sein.",
+    "No climate entity data": "Keine Klimagerätedaten vorhanden",
+    "Temperature Range": "Temperaturbereich",
+    "Time Slots:": "Zeitabschnitte:",
+    "Prev Day End:": "Endwert des Vortags:",
+    "Snap Value:": "Rasterschritt:",
+    "None": "Keine",
+    "e.g. Time": "z. B. Uhrzeit",
+    "e.g. Value": "z. B. Temperatur",
+    "❌ Connection Failed": "❌ Verbindung fehlgeschlagen",
+    "Could not connect to Home Assistant": "Verbindung zu Home Assistant konnte nicht hergestellt werden",
+    "Technical Details": "Technische Details",
+    "Troubleshooting:": "Fehlerbehebung:",
+    "No groups created yet": "Noch keine Gruppen erstellt",
+    "No unmonitored entities": "Keine Geräte ohne Zeitplan",
+    "Select a group...": "Gruppe auswählen …",
+    "Install Workday integration": "Arbeitstag-Integration installieren",
+    "Undo last change (Ctrl+Z)": "Letzte Änderung rückgängig machen (Strg+Z)",
+    "Copy current schedule": "Aktuellen Zeitplan kopieren",
+    "Paste copied schedule": "Kopierten Zeitplan einfügen",
+    "Clear advance history markers": "Markierungen vorgezogener Schaltpunkte löschen",
+    "Test fire event with current active node": "Testereignis für den aktiven Schaltpunkt auslösen",
+    "Failed to show group selection modal": "Gruppenauswahl konnte nicht geöffnet werden",
+    "Failed to switch profile": "Profil konnte nicht gewechselt werden",
+    "Failed to load canvas graph component": "Diagramm konnte nicht geladen werden",
+    "Returned to active profile": "Aktives Profil wieder geöffnet",
+    "Failed to save mode change": "Änderung des Zeitplanmodus konnte nicht gespeichert werden",
+    "Selected profile is unavailable for the target schedule": "Das ausgewählte Profil ist für diesen Zeitplan nicht verfügbar",
+    "Select a monitored schedule first": "Bitte zuerst einen Zeitplan mit aktiver Zeitsteuerung auswählen",
+    "Dismiss this notice": "Hinweis schließen",
+    "Virtual Schedule (No Entities) - Events Only": "Virtueller Zeitplan (ohne Geräte) – nur Ereignisse",
+    "Entity enabled": "Gerät aktiviert",
+    "Entity ignored": "Zeitsteuerung für das Gerät deaktiviert",
+    "Cancel Advance": "Vorziehen aufheben",
+    "Cancel advance override for all entities in group": "Vorziehen für alle Geräte der Gruppe aufheben",
+    "Advance all entities in group to next scheduled node": "Alle Geräte der Gruppe zum nächsten Schaltpunkt vorziehen",
+    "Advance canceled for all entities in group": "Vorziehen für alle Geräte der Gruppe aufgehoben",
+    "Advanced all entities in group to next scheduled node": "Alle Geräte der Gruppe zum nächsten Schaltpunkt vorgezogen",
+    "Advance history cleared for all entities in group": "Verlauf vorgezogener Schaltpunkte für alle Geräte der Gruppe gelöscht",
+    "Saved!": "Gespeichert!",
+    "Copied!": "Kopiert!",
+    "Pasted!": "Eingefügt!",
+    "Schedule cleared": "Zeitplan gelöscht",
+    "Failed to clear schedule. Please try again.": "Zeitplan konnte nicht gelöscht werden. Bitte erneut versuchen.",
+    "Failed to clear group schedule. Please try again.": "Gruppenzeitplan konnte nicht gelöscht werden. Bitte erneut versuchen.",
+    "Schedule saved, but failed to update enabled state.": "Zeitplan gespeichert, aber der Aktivierungsstatus konnte nicht aktualisiert werden.",
+    "Failed to save schedule. Check browser console for details.": "Zeitplan konnte nicht gespeichert werden. Details stehen in der Browserkonsole.",
+    "Integration reloaded successfully": "Integration erfolgreich neu geladen",
+    "A group with this name already exists. Please select it from the dropdown or use a different name.": "Eine Gruppe mit diesem Namen existiert bereits. Bitte auswählen oder einen anderen Namen verwenden.",
+    "Please select the current temperature unit (FROM)": "Bitte die aktuelle Temperatureinheit auswählen (von)",
+    "Please select the target temperature unit (TO)": "Bitte die neue Temperatureinheit auswählen (nach)",
+    "Converting...": "Wird umgerechnet …",
+    "23:59 (in use)": "23:59 (belegt)",
+    "⟲ Syncing...": "⟲ Wird synchronisiert …",
+    "✓ Synced!": "✓ Synchronisiert!",
+    "⟲ Sync All Thermostats": "⟲ Alle Thermostate synchronisieren",
+    "When enabled, uses the Workday integration for accurate 5/2 scheduling (respects holidays and custom workdays). When disabled, uses the selected workdays below.": "Verwendet die Arbeitstag-Integration für den 5/2-Modus und berücksichtigt Feiertage sowie individuelle Arbeitstage. Andernfalls gelten die unten ausgewählten Arbeitstage.",
+    "Could not determine if Workday integration is installed.": "Die Verfügbarkeit der Arbeitstag-Integration konnte nicht ermittelt werden.",
+    "✓ Reset!": "✓ Zurückgesetzt!",
+    "✓ Cleared!": "✓ Gelöscht!",
+    "🔍 Running diagnostics...": "🔍 Diagnose läuft …",
+    "✓ Diagnostics Complete!": "✓ Diagnose abgeschlossen!",
+    "🧹 Cleaning up...": "🧹 Wird bereinigt …",
+    "✓ Cleanup Complete!": "✓ Bereinigung abgeschlossen!",
+    "🧹 Cleanup Derivative Sensors": "🧹 Änderungsratensensoren bereinigen",
+    "Failed to cleanup derivative sensors": "Änderungsratensensoren konnten nicht bereinigt werden",
+    "🔍 Scanning...": "🔍 Wird durchsucht …",
+    "No orphaned entities found": "Keine verwaisten Entitäten gefunden",
+    "🗑️ Deleting...": "🗑️ Wird gelöscht …",
+    "No entities were removed": "Es wurden keine Entitäten entfernt",
+    "Failed to cleanup orphaned entities": "Verwaiste Entitäten konnten nicht bereinigt werden",
+    "🔍 Dry run...": "🔍 Vorschau wird erstellt …",
+    "Dry run complete: no stale storage entries to remove.": "Vorschau abgeschlossen: Keine veralteten Speichereinträge gefunden.",
+    "🧹 Cleaning storage...": "🧹 Speicher wird bereinigt …",
+    "Storage cleanup complete": "Speicherbereinigung abgeschlossen",
+    "Failed to cleanup storage": "Speicher konnte nicht bereinigt werden",
+    "Clear all nodes": "Alle Schaltpunkte löschen",
+    "Close profile editor": "Profileditor schließen",
+    "Schedule": "Zeitplan",
+    "Click to collapse": "Zum Einklappen klicken",
+    "▼ Expand": "▼ Aufklappen",
+    "▲ Collapse": "▲ Einklappen",
+    "Hide Config": "Konfiguration ausblenden",
+    "Show Config": "Konfiguration anzeigen",
+    "↶ Undo": "↶ Rückgängig",
+    "Double-click to add • Drag to move • Right-click/hold to delete": "Doppelklicken zum Hinzufügen • Ziehen zum Verschieben • Rechtsklicken oder gedrückt halten zum Löschen",
+    "keyframes": "Schaltpunkte",
+    "Workday integration not detected. Configure workdays manually below.": "Arbeitstag-Integration nicht gefunden. Bitte die Arbeitstage unten manuell festlegen.",
+    "• Try refreshing the page (pull down on mobile)": "• Seite neu laden (auf Mobilgeräten nach unten ziehen)",
+    "• Check if you're logged into Home Assistant": "• Anmeldung bei Home Assistant prüfen",
+    "• Restart the Home Assistant app": "• Home-Assistant-App neu starten",
+    "• Check Settings → Companion App → Debugging": "• Einstellungen → Companion App → Fehlerbehebung prüfen",
+    "Make sure the Climate Scheduler integration is installed and the frontend is available at /climate_scheduler/static": "Bitte prüfen, ob die Climate-Scheduler-Integration installiert und die Oberfläche unter /climate_scheduler/static erreichbar ist",
+    "Failed to load panel module:": "Panel konnte nicht geladen werden:",
+    "Home": "Zuhause",
+    "Away": "Abwesend",
+    "Sleep": "Schlafen",
+    "Comfort": "Komfort",
+    "Eco": "Energiesparen",
+    "Boost": "Schnellheizen",
+    "Heat Cool": "Heizen/Kühlen",
+    "Fan Only": "Nur Lüften",
+    "On": "Ein",
+    "Idle": "Inaktiv",
+    "Heating": "Heizen",
+    "Cooling": "Kühlen",
+    "Switched {0} to profile: {1}": "„{0}“ auf Profil „{1}“ umgestellt",
+    "Enabled scheduling for {0}": "Zeitplanung für „{0}“ aktiviert",
+    "Disabled scheduling for {0}": "Zeitplanung für „{0}“ deaktiviert",
+    "Created profile: {0}": "Profil erstellt: {0}",
+    "Renamed profile to: {0}": "Profil umbenannt in: {0}",
+    "Deleted profile: {0}": "Profil gelöscht: {0}",
+    "Failed to enable entity": "Gerät konnte nicht aktiviert werden",
+    "Failed to disable entity": "Gerät konnte nicht deaktiviert werden",
+    "Removed {0} from {1}": "„{0}“ aus „{1}“ entfernt",
+    "{0} is now unmonitored": "Zeitsteuerung für „{0}“ deaktiviert",
+    "Test event fired for node at {0}": "Testereignis für den Schaltpunkt um {0} ausgelöst",
+    "Cleared schedule for group \"{0}\"": "Zeitplan der Gruppe „{0}“ gelöscht",
+    "Moved entity from {0} to {1}": "Gerät von „{0}“ nach „{1}“ verschoben",
+    "Added entity to {0}": "Gerät zu „{0}“ hinzugefügt",
+    "Cannot convert from {0} to {1} - they are the same unit": "Umrechnung von {0} nach {1} nicht möglich: Die Einheiten sind gleich",
+    "Successfully converted all schedules to {0}. Reloading...": "Alle Zeitpläne erfolgreich in {0} umgerechnet. Wird neu geladen …",
+    "Renamed group to: {0}": "Gruppe umbenannt in: {0}",
+    "Deleted group: {0}": "Gruppe gelöscht: {0}",
+    "Graph snap step set to {0}°": "Diagrammraster auf {0}° eingestellt",
+    "Input field step set to {0}°": "Eingabeschrittweite auf {0}° eingestellt",
+    "Humidity slider step set to {0}%": "Schrittweite der Luftfeuchtigkeit auf {0}% eingestellt",
+    "Diagnostics saved to {0}": "Diagnose gespeichert unter {0}",
+    "Deleted {0} sensors with {1} errors": "{0} Sensoren gelöscht; {1} Fehler aufgetreten",
+    "Removed {0} orphaned entities": "{0} verwaiste Entitäten entfernt",
+    "Dry-run preview saved to {0}": "Bereinigungsvorschau gespeichert unter {0}",
+    "Cleanup result saved to {0}": "Bereinigungsergebnis gespeichert unter {0}",
+    "Editing Profile: {0}": "Profil bearbeiten: {0}",
+    "Member Entities ({0})": "Zugeordnete Geräte ({0})",
+    "{0} (in use)": "{0} (belegt)",
+    "Timeline Editor ({0}h • {1} slots @ {2}min)": "Zeitplaneditor ({0} h • {1} Abschnitte à {2} min)",
+    "Entity {0}": "Gerät {0}",
+    "{0} groups": "{0} Gruppen",
+    "{0} entity references": "{0} Geräteverweise",
+    "{0} profiles": "{0} Profile",
+    "{0} advance-history entries": "{0} Verlaufseinträge vorgezogener Schaltpunkte",
+    "Failed to monitor entity: {0}": "Zeitsteuerung konnte nicht aktiviert werden: {0}",
+    "Failed to update enabled state: {0}": "Aktivierungsstatus konnte nicht aktualisiert werden: {0}",
+    "Failed to load profile: {0}": "Profil konnte nicht geladen werden: {0}",
+    "Failed to create profile: {0}": "Profil konnte nicht erstellt werden: {0}",
+    "Failed to rename profile: {0}": "Profil konnte nicht umbenannt werden: {0}",
+    "Failed to delete profile: {0}": "Profil konnte nicht gelöscht werden: {0}",
+    "Failed to remove entity from group: {0}": "Gerät konnte nicht aus der Gruppe entfernt werden: {0}",
+    "Failed to unmonitor entity: {0}": "Zeitsteuerung konnte nicht deaktiviert werden: {0}",
+    "Failed: {0}": "Fehlgeschlagen: {0}",
+    "Failed to fire test event: {0}": "Testereignis konnte nicht ausgelöst werden: {0}",
+    "Failed to reload integration: {0}": "Integration konnte nicht neu geladen werden: {0}",
+    "Failed to convert schedules: {0}": "Zeitpläne konnten nicht umgerechnet werden: {0}",
+    "Failed to rename group: {0}": "Gruppe konnte nicht umbenannt werden: {0}",
+    "Failed to delete group: {0}": "Gruppe konnte nicht gelöscht werden: {0}",
+    "Failed to sync temperatures: {0}": "Temperaturen konnten nicht synchronisiert werden: {0}",
+    "Failed to run diagnostics: {0}": "Diagnose konnte nicht ausgeführt werden: {0}",
+    "⚠️ Preset-Only Devices Detected": "⚠️ Geräte ohne Temperatursensor erkannt",
+    "{0} devices in this group have no temperature sensor and will only receive mode changes (HVAC, fan, swing, preset).": "{0} Geräte dieser Gruppe haben keinen Temperatursensor. Sie erhalten nur Änderungen der Betriebsart, des Lüfter- oder Schwenkmodus und der Voreinstellung.",
+    "Auto-creation of derivative sensors is disabled.\n\nThis will DELETE ALL climate_scheduler derivative sensors.\n\nAre you sure you want to continue?": "Die automatische Erstellung von Änderungsratensensoren ist deaktiviert.\n\nALLE Änderungsratensensoren von Climate Scheduler werden GELÖSCHT.\n\nWirklich fortfahren?",
+    "This will remove derivative sensors for thermostats that no longer exist.\n\nContinue?": "Änderungsratensensoren nicht mehr vorhandener Thermostate werden entfernt.\n\nFortfahren?",
+    "Found {0} orphaned entities:\n\n• {1}\n\nThese entities no longer have matching groups or climate entities in storage.\n\nDelete these entities?": "{0} verwaiste Entitäten gefunden:\n\n• {1}\n\nDiesen Entitäten sind keine gespeicherten Gruppen oder Klimageräte mehr zugeordnet.\n\nDiese Entitäten löschen?",
+    "Dry run found changes:": "Die Vorschau hat Änderungen gefunden:",
+    "Will remove: {0}.": "Wird entfernt: {0}.",
+    "Groups: {0}": "Gruppen: {0}",
+    "Proceed with cleanup?": "Mit der Bereinigung fortfahren?",
+    "Show Debug Panel": "Diagnosekonsole anzeigen",
+    "Auto-create derivative sensors": "Änderungsratensensoren automatisch erstellen",
+    "Install it from HACS or visit:": "Über HACS installieren oder folgende Seite besuchen:",
+    "Climate Scheduler Card": "Climate-Scheduler-Karte",
+    "Full Climate Scheduler UI as a Lovelace card": "Vollständige Climate-Scheduler-Oberfläche als Lovelace-Karte",
+    "Climate Scheduler has been updated. Please refresh your browser (Ctrl+F5 or Cmd+Shift+R) to load the new version.": "Climate Scheduler wurde aktualisiert. Bitte den Browser mit Strg+F5 oder Cmd+Umschalt+R neu laden.",
+    "Integration frontend not found at /climate_scheduler/static": "Integrationsoberfläche unter /climate_scheduler/static nicht gefunden",
+    "No authentication token found. Please ensure the panel is loaded within Home Assistant.": "Kein Anmeldetoken gefunden. Bitte das Panel innerhalb von Home Assistant öffnen.",
+    "WebSocket not connected": "Keine WebSocket-Verbindung",
+    "Failed to load panel module: {0}": "Panel konnte nicht geladen werden: {0}",
+    "Unknown": "Unbekannt",
+    "Unavailable": "Nicht verfügbar",
+    "Horizontal": "Horizontal",
+    "Vertical": "Vertikal",
+    "Both": "Beide",
+    "Quiet": "Leise",
+    "Turbo": "Turbo",
+    "Middle": "Mitte",
+    "Top": "Oben",
+    "Bottom": "Unten",
+    "Left": "Links",
+    "Right": "Rechts",
+    "e.g. 5.0": "z. B. 5,0",
+    "e.g. 30.0": "z. B. 30,0",
+    "(manual)": "(manuell)",
+    "Debug panel restored from saved state": "Gespeicherten Zustand der Diagnosekonsole wiederhergestellt",
+    "Log level set to debug (check Home Assistant logs)": "Protokollstufe auf Debug gesetzt (siehe Home-Assistant-Protokolle)",
+    "Debug panel enabled": "Diagnosekonsole aktiviert",
+    "Frontend operations will be logged here. Backend logs are in Home Assistant system log.": "Oberflächenaktionen werden hier protokolliert. Backend-Protokolle stehen im Systemprotokoll von Home Assistant.",
+    "Debug panel disabled": "Diagnosekonsole deaktiviert",
+    "Log level reset to info": "Protokollstufe auf Info zurückgesetzt",
+    "Debug console cleared": "Diagnosekonsole geleert",
+    "Failed to set log level: {0}": "Protokollstufe konnte nicht gesetzt werden: {0}",
+    "Failed to reset log level: {0}": "Protokollstufe konnte nicht zurückgesetzt werden: {0}",
+    "Server timezone: {0}": "Server-Zeitzone: {0}",
+    "Deleted {0} sensor entities. Integration reloaded.": "{0} Sensorentitäten gelöscht. Integration neu geladen.",
+    "Deleted {0} sensor entities. Integration reloaded. Errors: {1}.": "{0} Sensorentitäten gelöscht. Integration neu geladen. Fehler: {1}."
+};
+const messageTemplates = Object.entries(de)
+    .filter(([key]) => key.includes('{0}'))
+    .map(([key, translated]) => ({
+    pattern: new RegExp('^' + key.split(/\{\d+\}/).map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('(.*?)') + '$', 's'),
+    translated,
+}));
+function getLanguage() {
+    const panel = typeof window !== 'undefined' ? window.climateSchedulerPanelRoot : null;
+    const language = panel?.hass?.locale?.language || panel?.hass?.language;
+    return language || (typeof document !== 'undefined' ? document.documentElement.lang : '') || 'en';
+}
+function t$3(message, language = getLanguage()) {
+    if (!language.toLowerCase().startsWith('de'))
+        return message;
+    if (Object.prototype.hasOwnProperty.call(de, message))
+        return de[message];
+    for (const { pattern, translated } of messageTemplates) {
+        const match = message.match(pattern);
+        if (match)
+            return translated.replace(/\{(\d+)\}/g, (_, index) => match[Number(index) + 1]);
+    }
+    // Match whole UI messages; captured names remain exactly as entered by the user.
+    const patterns = [
+        [/^Start monitoring (.*?)\?\n\nThis entity will be managed by the scheduler again\.$/s, name => `Zeitsteuerung für „${name}“ aktivieren?\n\nDieses Gerät wird wieder vom Zeitplan gesteuert.`],
+        [/^Stop monitoring (.*?)\?\n\nUnmonitored entities will not be managed by the scheduler\.$/s, name => `Zeitsteuerung für „${name}“ deaktivieren?\n\nDieses Gerät wird nicht mehr vom Zeitplan gesteuert.`],
+        [/^Delete profile "(.*?)"\?$/s, name => `Profil „${name}“ löschen?`],
+        [/^Rename profile "(.*?)" to:$/s, name => `Neuer Name für das Profil „${name}“:`],
+        [/^Clear schedule for group "(.*?)"\?$/s, name => `Zeitplan der Gruppe „${name}“ löschen?`],
+        [/^Delete group "(.*?)"\? All entities will be moved back to the entity list\.$/s, name => `Gruppe „${name}“ löschen? Alle Geräte werden zurück in die Geräteliste verschoben.`],
+        [/^Remove "(.*?)" from group "(.*?)"\?\n\nThe entity will return to your active entities list\.$/s, (name, group) => `„${name}“ aus der Gruppe „${group}“ entfernen?\n\nDas Gerät wird wieder in der Liste aktiver Geräte angezeigt.`],
+        [/^(.*?) is now monitored\.$/s, name => `Zeitsteuerung für „${name}“ aktiviert.`],
+        [/^Schedule \((All Days|Weekday|Weekend|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\)$/s, day => `Zeitplan (${de[day] || day})`],
+    ];
+    for (const [pattern, translate] of patterns) {
+        const match = message.match(pattern);
+        if (match)
+            return translate(...match.slice(1));
+    }
+    return message;
+}
+
+/** Readable axis ticks without changing the graph's temperature range. */
+function temperatureTicks(min, max, count = 6) {
+    if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min)
+        return [];
+    const rough = (max - min) / Math.max(1, count - 1);
+    const magnitude = 10 ** Math.floor(Math.log10(rough));
+    const step = ([1, 2, 2.5, 5, 10].find(n => n * magnitude >= rough) || 10) * magnitude;
+    const ticks = [];
+    for (let i = Math.ceil(min / step); i * step <= max + step * 1e-9; i++) {
+        ticks.push(Number((i * step).toPrecision(12)));
+    }
+    return ticks;
+}
+
 /**
  * @license
  * Copyright 2019 Google LLC
@@ -355,23 +845,22 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
         const graphHeight = this.canvasHeight - labelHeight - topMargin - bottomMargin;
         const graphWidth = this.canvasWidth - leftMargin - yAxisWidth - rightMargin;
         // Draw Y axis labels and horizontal grid lines
-        const numYLabels = this.collapsed ? 2 : 5;
+        const ticks = this.collapsed ? [this.minValue, this.maxValue] : temperatureTicks(this.minValue, this.maxValue);
         const baseFontSize = this.getBaseFontSize();
-        const yLabelOffset = 5 * dpr; // Distance from Y-axis to label text
-        const yAxisLabelOffset = -10 * dpr; // Distance from left edge to vertical Y-axis label
+        const yLabelOffset = 9 * dpr; // Distance from Y-axis to label text
+        const yAxisLabelOffset = -20 * dpr; // Distance from left edge to vertical Y-axis label
         const xAxisLabelOffset = 25 * dpr; // Distance from bottom to horizontal X-axis label
         this.ctx.fillStyle = this.getThemeColor('--canvas-text-secondary');
-        this.ctx.font = `${baseFontSize * dpr}px sans-serif`;
+        this.ctx.font = `${baseFontSize * 0.8 * dpr}px sans-serif`;
         this.ctx.textAlign = 'right';
         this.ctx.textBaseline = 'middle';
         this.ctx.strokeStyle = this.getThemeColor('--canvas-grid-line');
         this.ctx.lineWidth = 1 * dpr;
-        for (let i = 0; i < numYLabels; i++) {
-            const ratio = i / (numYLabels - 1);
-            const value = this.minValue + ratio * (this.maxValue - this.minValue);
+        for (const value of ticks) {
+            const ratio = (value - this.minValue) / (this.maxValue - this.minValue);
             const y = topMargin + (graphHeight * (1 - ratio));
             // Draw label
-            this.ctx.fillText(value.toFixed(1), leftMargin + yAxisWidth - yLabelOffset, y);
+            this.ctx.fillText(new Intl.NumberFormat(getLanguage(), { maximumFractionDigits: 2 }).format(value), leftMargin + yAxisWidth - yLabelOffset, y);
             // Draw horizontal grid line
             this.ctx.beginPath();
             this.ctx.moveTo(leftMargin + yAxisWidth, y);
@@ -387,7 +876,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
             this.ctx.font = `${baseFontSize * dpr}px sans-serif`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
-            this.ctx.fillText(this.yAxisLabel, 0, 0);
+            this.ctx.fillText(t$3(this.yAxisLabel), 0, 0);
             this.ctx.restore();
         }
         // Adjust slot width for graph area
@@ -460,7 +949,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
             this.ctx.font = `${baseFontSize * dpr}px sans-serif`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'top';
-            this.ctx.fillText(this.xAxisLabel, leftMargin + yAxisWidth + (graphWidth / 2), this.canvasHeight - xAxisLabelOffset);
+            this.ctx.fillText(t$3(this.xAxisLabel), leftMargin + yAxisWidth + (graphWidth / 2), this.canvasHeight - xAxisLabelOffset);
         }
         // Draw background graphs (reference data)
         const ctx = this.ctx;
@@ -746,7 +1235,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
                         }
                     }
                     if (displayPoint) {
-                        const label = historyGraph.label || 'Temperature';
+                        const label = historyGraph.label || t$3('Temperature');
                         const color = historyGraph.color || BACKGROUND_GRAPH_COLORS[graphIndex % BACKGROUND_GRAPH_COLORS.length];
                         tooltipLines.push({ text: `${label}: ${displayPoint.value.toFixed(1)}°`, color });
                     }
@@ -868,7 +1357,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
         // Check if scrollable (only in expanded mode)
         const isScrollable = !this.collapsed && this.wrapperEl && this.wrapperEl.scrollWidth > this.wrapperEl.clientWidth;
         // For touch devices, set up long-press detection FIRST (before any returns)
-        if (e instanceof TouchEvent) {
+        if ('touches' in e) {
             const currentTime = Date.now();
             const timeSinceLastClick = currentTime - this.lastClickTime;
             const dx = x - this.lastClickX;
@@ -961,7 +1450,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
         if (e instanceof MouseEvent && !this.isDragging && !this.isPanning && this.canvas) {
             this.queueHoverTooltipRender(e.offsetX, e.offsetY);
         }
-        else if (e instanceof TouchEvent) {
+        else if ('touches' in e) {
             this.hideHoverTooltip();
         }
         // Handle panning first (takes priority when active)
@@ -973,7 +1462,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
             return;
         }
         // Cancel long-press if moving during touch hold
-        if (e instanceof TouchEvent && this.holdTimer) {
+        if ('touches' in e && this.holdTimer) {
             const rect = this.canvas?.getBoundingClientRect();
             if (rect) {
                 this.wrapperEl?.scrollLeft || 0;
@@ -1037,7 +1526,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
             // Snap times to nearest slot (15-minute intervals)
             const slotDuration = this.duration / this.slots;
             newStartTime = Math.round(newStartTime / slotDuration) * slotDuration;
-            newEndTime = Math.round(newEndTime / slotDuration) * slotDuration;
+            newEndTime = Math.min(23 + 59 / 60, Math.round(newEndTime / slotDuration) * slotDuration);
             // Update keyframes
             this.keyframes[startIndex].time = newStartTime;
             this.keyframes[endIndex].time = newEndTime;
@@ -1109,7 +1598,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
         value = this.snapValueToGrid(value);
         // Update keyframe position
         const oldTime = this.keyframes[this.draggingIndex].time;
-        this.keyframes = this.keyframes.map((kf, i) => i === this.draggingIndex ? { time, value } : kf);
+        this.keyframes = this.keyframes.map((kf, i) => i === this.draggingIndex ? { ...kf, time, value } : kf);
         // Re-sort if time changed (might change position in array)
         if (Math.abs(time - oldTime) > 0.01) {
             this.sortKeyframes();
@@ -1155,7 +1644,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
             }));
         }
         // Handle tap selection for touch devices (when not dragging)
-        if (e instanceof TouchEvent && this.draggingIndex !== null && !this.hasMoved) {
+        if ('touches' in e && this.draggingIndex !== null && !this.hasMoved) {
             // Select the keyframe
             this.selectedKeyframeIndex = this.draggingIndex;
             this.drawTimeline();
@@ -1608,39 +2097,39 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
         return b `
       <div class="timeline-container">
         ${!this.showHeader && this.title && this.allowCollapse ? b `
-          <div class="timeline-title" @click=${this.toggleCollapse} title="Click to ${this.collapsed ? 'expand' : 'collapse'}">
-            ${this.title}
+          <div class="timeline-title" @click=${this.toggleCollapse} title="${t$3(this.collapsed ? 'Click to expand' : 'Click to collapse')}">
+            ${t$3(this.title)}
           </div>
         ` : !this.showHeader && this.title ? b `
           <div class="timeline-title" style="cursor: default;">
-            ${this.title}
+            ${t$3(this.title)}
           </div>
         ` : ''}
         
         ${this.showHeader ? b `
           <div class="timeline-header">
-            <span @click=${this.allowCollapse ? this.toggleCollapse : null} title="${this.allowCollapse ? `Click to ${this.collapsed ? 'expand' : 'collapse'}` : ''}" style="cursor: ${this.allowCollapse ? 'pointer' : 'default'};">
-              ${this.title || `Timeline Editor (${this.duration}h • ${this.slots} slots @ ${slotMinutes.toFixed(0)}min)`}
+            <span @click=${this.allowCollapse ? this.toggleCollapse : null} title="${this.allowCollapse ? t$3(this.collapsed ? 'Click to expand' : 'Click to collapse') : ''}" style="cursor: ${this.allowCollapse ? 'pointer' : 'default'};">
+              ${t$3(this.title || `Timeline Editor (${this.duration}h • ${this.slots} slots @ ${slotMinutes.toFixed(0)}min)`)}
             </span>
             <div class="timeline-controls">
-              <button class="secondary" @click=${this.selectPrevious} ?disabled=${this.keyframes.length === 0} title="Previous keyframe">
+              <button class="secondary" @click=${this.selectPrevious} ?disabled=${this.keyframes.length === 0} title="${t$3("Previous keyframe")}">
                 ◀
               </button>
-              <button class="secondary" @click=${this.selectNext} ?disabled=${this.keyframes.length === 0} title="Next keyframe">
+              <button class="secondary" @click=${this.selectNext} ?disabled=${this.keyframes.length === 0} title="${t$3("Next keyframe")}">
                 ▶
               </button>
               ${this.allowCollapse ? b `
                 <button class="secondary" @click=${this.toggleCollapse}>
-                  ${this.collapsed ? '▼ Expand' : '▲ Collapse'}
+                  ${this.collapsed ? t$3('▼ Expand') : t$3('▲ Collapse')}
                 </button>
               ` : ''}
               <button class="secondary" @click=${this.toggleConfig}>
-                ${this.showConfig ? 'Hide' : 'Show'} Config
+                ${t$3(this.showConfig ? 'Hide Config' : 'Show Config')}
               </button>
               <button class="secondary" @click=${this.undo} ?disabled=${this.undoStack.length === 0}>
-                ↶ Undo
+                ${t$3("↶ Undo")}
               </button>
-              <button @click=${this.clearKeyframes}>Clear</button>
+              <button @click=${this.clearKeyframes}>${t$3("Clear")}</button>
             </div>
           </div>
         ` : ''}
@@ -1648,7 +2137,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
         ${this.showConfig ? b `
           <div class="config-panel">
             <div class="config-row">
-              <label>Duration (hours):</label>
+              <label>${t$3("Duration (hours):")}</label>
               <input 
                 type="number" 
                 min="1" 
@@ -1658,7 +2147,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
               />
             </div>
             <div class="config-row">
-              <label>Time Slots:</label>
+              <label>${t$3("Time Slots:")}</label>
               <input 
                 type="number" 
                 min="1" 
@@ -1668,19 +2157,19 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
               />
             </div>
             <div class="config-row">
-              <label>Prev Day End:</label>
+              <label>${t$3("Prev Day End:")}</label>
               <input 
                 type="number" 
                 min="${this.minValue}" 
                 max="${this.maxValue}" 
                 step="0.01"
-                placeholder="Auto"
+                placeholder="${t$3("Auto")}"
                 .value=${this.previousDayEndValue?.toString() || ''}
                 @change=${this.updatePreviousDayEnd}
               />
             </div>
             <div class="config-row">
-              <label>Min Value:</label>
+              <label>${t$3("Min Value:")}</label>
               <input 
                 type="number" 
                 step="0.1"
@@ -1689,7 +2178,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
               />
             </div>
             <div class="config-row">
-              <label>Max Value:</label>
+              <label>${t$3("Max Value:")}</label>
               <input 
                 type="number" 
                 step="0.1"
@@ -1698,30 +2187,30 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
               />
             </div>
             <div class="config-row">
-              <label>Snap Value:</label>
+              <label>${t$3("Snap Value:")}</label>
               <input 
                 type="number" 
                 min="0"
                 step="0.01"
-                placeholder="None"
+                placeholder="${t$3("None")}"
                 .value=${this.snapValue > 0 ? this.snapValue.toString() : ''}
                 @change=${this.updateSnapValue}
               />
             </div>
             <div class="config-row">
-              <label>X Axis Label:</label>
+              <label>${t$3("X Axis Label:")}</label>
               <input 
                 type="text" 
-                placeholder="e.g. Time"
+                placeholder="${t$3("e.g. Time")}"
                 .value=${this.xAxisLabel}
                 @input=${this.updateXAxisLabel}
               />
             </div>
             <div class="config-row">
-              <label>Y Axis Label:</label>
+              <label>${t$3("Y Axis Label:")}</label>
               <input 
                 type="text" 
-                placeholder="e.g. Value"
+                placeholder="${t$3("e.g. Value")}"
                 .value=${this.yAxisLabel}
                 @input=${this.updateYAxisLabel}
               />
@@ -1734,14 +2223,14 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
             <div class="graph-legend ${this.legendCollapsed ? 'collapsed' : ''}">
               <div class="graph-legend-header" @click=${this.toggleLegend}>
                 <span class="graph-legend-toggle">▶</span>
-                <span>Legend</span>
+                <span>${t$3("Legend")}</span>
               </div>
               ${!this.legendCollapsed ? b `
                 <div class="graph-legend-items">
                   ${this.backgroundGraphs.map((bgGraph, graphIndex) => b `
-                    <div class="graph-legend-item" title=${bgGraph.label || `Entity ${graphIndex + 1}`}>
+                    <div class="graph-legend-item" title=${bgGraph.label || t$3(`Entity ${graphIndex + 1}`)}>
                       <span class="graph-legend-swatch" style="background: ${this.getBackgroundGraphColor(bgGraph, graphIndex)};"></span>
-                      <span class="graph-legend-label">${bgGraph.label || `Entity ${graphIndex + 1}`}</span>
+                      <span class="graph-legend-label">${bgGraph.label || t$3(`Entity ${graphIndex + 1}`)}</span>
                     </div>
                   `)}
                 </div>
@@ -1766,7 +2255,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
               ></canvas>
               <div class="cursor-tooltip" hidden></div>
             </div>
-            ${this.collapsed ? b `<div class="expand-hint">Click to expand</div>` : ''}
+            ${this.collapsed ? b `<div class="expand-hint">${t$3("Click to expand")}</div>` : ''}
           </div>
           ${this.showScrollNavLeft ? b `
             <div class="scroll-nav left" @click=${this.scrollToStart}>◀</div>
@@ -1777,7 +2266,7 @@ let KeyframeTimeline = class KeyframeTimeline extends i {
         </div>
         
         <div class="info">
-          Double-click to add • Drag to move • Right-click/hold to delete • ${this.keyframes.length} keyframes
+          ${t$3("Double-click to add • Drag to move • Right-click/hold to delete")} • ${this.keyframes.length} ${t$3("keyframes")}
         </div>
       </div>
     `;
@@ -1789,22 +2278,22 @@ KeyframeTimeline.styles = i$3 `
       width: 100%;
       --timeline-height: 400px;
       --timeline-height-collapsed: 100px;
-      --timeline-bg: var(--card-background-color, #1c1c1c);
+      --timeline-bg: var(--surface, var(--card-background-color, #ffffff));
       --timeline-track: var(--secondary-background-color, #2c2c2c);
       --timeline-ruler: var(--divider-color, rgba(255, 255, 255, 0.12));
       --keyframe-color: var(--accent-color, var(--primary-color, #03a9f4));
       --keyframe-selected-color: var(--success-color, #4caf50);
       --keyframe-dragging-color: var(--warning-color, #ff9800);
-      --canvas-text-primary: var(--primary-text-color, rgba(255, 255, 255, 0.9));
-      --canvas-text-secondary: var(--secondary-text-color, rgba(255, 255, 255, 0.7));
-      --canvas-grid-line: rgba(68, 68, 68, 0.3);
-      --canvas-grid-line-major: rgba(68, 68, 68, 0.5);
-      --canvas-label-bg: var(--card-background-color, rgba(0, 0, 0, 0.7));
+      --canvas-text-primary: var(--text-primary, var(--primary-text-color, #212121));
+      --canvas-text-secondary: var(--text-secondary, var(--secondary-text-color, #616161));
+      --canvas-grid-line: rgba(128, 128, 128, 0.12);
+      --canvas-grid-line-major: rgba(128, 128, 128, 0.22);
+      --canvas-label-bg: var(--timeline-bg);
       --indicator-color: var(--accent-color, #ff9800);
     }
     
     .timeline-container {
-      background: var(--background);
+      background: transparent;
       border-radius: 4px;
       padding: 0;
       user-select: none;
@@ -1813,7 +2302,7 @@ KeyframeTimeline.styles = i$3 `
     .timeline-title {
       font-size: 16px;
       font-weight: 600;
-      color: var(--primary-text-color, #e1e1e1);
+      color: var(--canvas-text-primary);
       cursor: pointer;
       user-select: none;
       margin-bottom: 12px;
@@ -1847,8 +2336,11 @@ KeyframeTimeline.styles = i$3 `
       font-size: 14px;
     }
     
-    button:hover {
-      opacity: 0.9;
+    button:hover:not(:disabled) {
+      opacity: 1;
+      background: color-mix(in srgb, var(--primary-color, #03a9f4) 12%, var(--card-background-color, #242424));
+      color: var(--primary-text-color, #eee);
+      border-color: var(--primary-color, #03a9f4);
     }
     
     button:disabled {
@@ -1917,7 +2409,7 @@ KeyframeTimeline.styles = i$3 `
       width: 100%;
       overflow-x: auto;
       overflow-y: hidden;
-      background: var(--timeline-track);
+      background: transparent;
       border-radius: 4px;
       transition: height 0.3s ease;
       cursor: pointer;
@@ -1953,7 +2445,7 @@ KeyframeTimeline.styles = i$3 `
     .timeline-canvas {
       min-width: max(100%, 800px);
       height: var(--timeline-height);
-      background: var(--timeline-track);
+      background: transparent;
       cursor: crosshair;
       position: relative;
       touch-action: none;
@@ -2045,7 +2537,7 @@ KeyframeTimeline.styles = i$3 `
       z-index: 12;
       min-width: 160px;
       max-width: 240px;
-      background: rgba(0, 0, 0, 0.5);
+      background: var(--timeline-bg);
       border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.2));
       border-radius: 6px;
       color: var(--canvas-text-primary);
@@ -2127,8 +2619,17 @@ KeyframeTimeline.styles = i$3 `
     .info {
       margin-top: 12px;
       font-size: 12px;
-      color: var(--secondary-text-color, #9e9e9e);
+      color: var(--canvas-text-secondary);
     }
+
+    .timeline-container { border-radius: 14px; }
+    .timeline-title { font-size: 14px; letter-spacing: -0.01em; }
+    .timeline-header, .timeline-controls { flex-wrap: wrap; gap: 8px; }
+    button { min-height: 36px; border-radius: 8px; font: inherit; font-size: 12px; }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 3px; }
+    .config-panel { border-radius: 12px; padding: 16px; }
+    .config-row { flex-wrap: wrap; }
+    input[type="number"], input[type="text"] { border-radius: 7px; min-height: 30px; }
   `;
 __decorate([
     n({ type: Number })
